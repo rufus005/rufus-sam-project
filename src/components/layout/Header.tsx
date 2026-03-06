@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, User, Search, Menu, ShoppingBag, LogOut } from "lucide-react";
+import { ShoppingCart, User, Search, Menu, ShoppingBag, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,13 +11,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "@/hooks/useCart";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Header() {
   const { user, signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { cartCount } = useCart();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +54,7 @@ export default function Header() {
                 <>
                   <Link to="/profile" className="text-lg font-medium hover:text-primary">Profile</Link>
                   <Link to="/orders" className="text-lg font-medium hover:text-primary">Orders</Link>
+                  {isAdmin && <Link to="/admin" className="text-lg font-medium hover:text-primary">Admin</Link>}
                 </>
               )}
             </nav>
@@ -62,6 +72,11 @@ export default function Header() {
           <Link to="/products" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Products
           </Link>
+          {isAdmin && (
+            <Link to="/admin" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              <Shield className="h-3 w-3" /> Admin
+            </Link>
+          )}
         </nav>
 
         {/* Search */}
@@ -79,9 +94,14 @@ export default function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" asChild className="relative">
             <Link to="/cart">
               <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
             </Link>
           </Button>
 
@@ -99,6 +119,11 @@ export default function Header() {
                 <DropdownMenuItem asChild>
                   <Link to="/orders">Orders</Link>
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin">Admin Dashboard</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-destructive">
                   <LogOut className="h-4 w-4 mr-2" /> Sign out
