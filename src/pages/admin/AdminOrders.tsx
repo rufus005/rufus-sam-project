@@ -8,6 +8,12 @@ import { toast } from "@/hooks/use-toast";
 
 const statuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
+const paymentBadgeVariant = (status: string) => {
+  if (status === "paid") return "default";
+  if (status === "failed") return "destructive";
+  return "secondary";
+};
+
 export default function AdminOrders() {
   const qc = useQueryClient();
 
@@ -34,17 +40,25 @@ export default function AdminOrders() {
     },
   });
 
+  const getCustomerName = (order: any) => {
+    const addr = order.shipping_address;
+    if (typeof addr === "object" && addr?.full_name) return addr.full_name;
+    return "—";
+  };
+
   return (
     <AdminLayout>
       <h1 className="text-3xl font-bold mb-6">Orders</h1>
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Order ID</TableHead>
               <TableHead>Date</TableHead>
+              <TableHead>Customer</TableHead>
               <TableHead>Items</TableHead>
               <TableHead>Total</TableHead>
+              <TableHead>Payment</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -53,8 +67,14 @@ export default function AdminOrders() {
               <TableRow key={order.id}>
                 <TableCell className="font-mono text-xs">{order.id.slice(0, 8)}</TableCell>
                 <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                <TableCell className="font-medium">{getCustomerName(order)}</TableCell>
                 <TableCell>{(order as any).order_items?.length ?? 0}</TableCell>
                 <TableCell className="font-bold">${Number(order.total).toFixed(2)}</TableCell>
+                <TableCell>
+                  <Badge variant={paymentBadgeVariant(order.payment_status)}>
+                    {order.payment_status}
+                  </Badge>
+                </TableCell>
                 <TableCell>
                   <Select value={order.status} onValueChange={(v) => updateStatus.mutate({ id: order.id, status: v })}>
                     <SelectTrigger className="w-32 h-8">
