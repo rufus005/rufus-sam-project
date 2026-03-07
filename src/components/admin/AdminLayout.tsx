@@ -56,6 +56,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
+        <div className="p-4 border-t">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground" onClick={signOut}>
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
       </aside>
 
       {/* Mobile nav */}
