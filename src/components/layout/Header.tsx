@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, User, Search, Menu, ShoppingBag, LogOut, Shield } from "lucide-react";
+import { ShoppingCart, User, Search, Menu, ShoppingBag, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,11 +50,12 @@ export default function Header() {
             <nav className="flex flex-col gap-4 mt-8">
               <Link to="/" className="text-lg font-medium hover:text-primary">Home</Link>
               <Link to="/products" className="text-lg font-medium hover:text-primary">Products</Link>
+              <Link to="/about" className="text-lg font-medium hover:text-primary">About</Link>
+              <Link to="/contact" className="text-lg font-medium hover:text-primary">Contact</Link>
               {user && (
                 <>
                   <Link to="/profile" className="text-lg font-medium hover:text-primary">Profile</Link>
                   <Link to="/orders" className="text-lg font-medium hover:text-primary">Orders</Link>
-                  {isAdmin && <Link to="/admin" className="text-lg font-medium hover:text-primary">Admin</Link>}
                 </>
               )}
             </nav>
@@ -72,11 +73,12 @@ export default function Header() {
           <Link to="/products" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Products
           </Link>
-          {isAdmin && (
-            <Link to="/admin" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-              <Shield className="h-3 w-3" /> Admin
-            </Link>
-          )}
+          <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            About
+          </Link>
+          <Link to="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Contact
+          </Link>
         </nav>
 
         {/* Search */}
