@@ -177,6 +177,7 @@ export type Database = {
           id: string
           notes: string | null
           payment_intent_id: string | null
+          payment_status: string
           shipping_address: Json
           status: string
           total: number
@@ -189,6 +190,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_intent_id?: string | null
+          payment_status?: string
           shipping_address: Json
           status?: string
           total: number
@@ -201,6 +203,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_intent_id?: string | null
+          payment_status?: string
           shipping_address?: Json
           status?: string
           total?: number
