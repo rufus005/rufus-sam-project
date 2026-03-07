@@ -50,11 +50,12 @@ export default function Header() {
             <nav className="flex flex-col gap-4 mt-8">
               <Link to="/" className="text-lg font-medium hover:text-primary">Home</Link>
               <Link to="/products" className="text-lg font-medium hover:text-primary">Products</Link>
+              <Link to="/about" className="text-lg font-medium hover:text-primary">About</Link>
+              <Link to="/contact" className="text-lg font-medium hover:text-primary">Contact</Link>
               {user && (
                 <>
                   <Link to="/profile" className="text-lg font-medium hover:text-primary">Profile</Link>
                   <Link to="/orders" className="text-lg font-medium hover:text-primary">Orders</Link>
-                  {isAdmin && <Link to="/admin" className="text-lg font-medium hover:text-primary">Admin</Link>}
                 </>
               )}
             </nav>
