@@ -72,11 +72,12 @@ export default function Header() {
           <Link to="/products" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Products
           </Link>
-          {isAdmin && (
-            <Link to="/admin" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-              <Shield className="h-3 w-3" /> Admin
-            </Link>
-          )}
+          <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            About
+          </Link>
+          <Link to="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Contact
+          </Link>
         </nav>
 
         {/* Search */}
