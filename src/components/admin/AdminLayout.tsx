@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, Package, ShoppingCart, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, ArrowLeft, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
