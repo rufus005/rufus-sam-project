@@ -32,6 +32,7 @@ export default function Header() {
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
