@@ -76,7 +76,7 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
         </div>
       </div>
       <div className="text-right shrink-0">
-        <p className="font-bold">${lineTotal.toFixed(2)}</p>
+        <p className="font-bold">{formatPrice(lineTotal)}</p>
       </div>
     </div>
   );

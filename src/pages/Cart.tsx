@@ -71,7 +71,7 @@ export default function Cart() {
                 </div>
                 <div className="border-t pt-4 flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-primary">${cartTotal.toFixed(2)}</span>
+                  <span className="text-primary">{formatPrice(cartTotal)}</span>
                 </div>
                 <Button className="w-full h-12" size="lg" asChild>
                   <Link to="/checkout">

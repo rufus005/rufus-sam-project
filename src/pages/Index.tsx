@@ -122,7 +122,7 @@ export default function Index() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <p className="text-white text-sm font-semibold truncate">{product.name}</p>
-                    <p className="text-white/80 text-xs">${Number(product.price).toFixed(2)}</p>
+                    <p className="text-white/80 text-xs">{formatPrice(product.price)}</p>
                   </div>
                 </Link>
               ))}

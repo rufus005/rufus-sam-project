@@ -63,10 +63,10 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
         </Link>
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-baseline gap-2">
-            <span className="font-bold text-lg">${Number(product.price).toFixed(2)}</span>
+            <span className="font-bold text-lg">{formatPrice(product.price)}</span>
             {product.compare_at_price && (
               <span className="text-xs text-muted-foreground line-through">
-                ${Number(product.compare_at_price).toFixed(2)}
+                {formatPrice(product.compare_at_price)}
               </span>
             )}
           </div>

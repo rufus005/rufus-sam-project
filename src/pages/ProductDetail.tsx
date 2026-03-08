@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Minus, Plus, ArrowLeft, Star, Zap, Truck, Shield, RotateCcw } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
+import { formatPrice } from "@/lib/currency";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 
