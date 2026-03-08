@@ -287,7 +287,7 @@ export default function Checkout() {
                 {items.map((item) => (
                   <div key={item.id} className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{item.product.name} × {item.quantity}</span>
-                    <span className="font-medium">${(item.product.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-medium">{formatPrice(item.product.price * item.quantity)}</span>
                   </div>
                 ))}
                 <div className="border-t pt-3 flex justify-between font-bold">
