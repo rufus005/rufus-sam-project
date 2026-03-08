@@ -5,6 +5,7 @@ import CartItem from "@/components/CartItem";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
+import { formatPrice } from "@/lib/currency";
 
 export default function Cart() {
   const { user } = useAuth();
