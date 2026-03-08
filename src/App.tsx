@@ -21,6 +21,8 @@ import Contact from "./pages/Contact";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSubscribers from "./pages/admin/AdminSubscribers";
 import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 
