@@ -245,7 +245,7 @@ export default function AdminProducts() {
                 </TableCell>
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{(product as any).categories?.name ?? "—"}</TableCell>
-                <TableCell>${Number(product.price).toFixed(2)}</TableCell>
+                <TableCell>{formatPrice(product.price)}</TableCell>
                 <TableCell>{product.stock_quantity}</TableCell>
                 <TableCell>
                   <Badge variant={product.is_active ? "default" : "secondary"}>
