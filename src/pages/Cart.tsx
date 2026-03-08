@@ -5,6 +5,7 @@ import CartItem from "@/components/CartItem";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
+import { formatPrice } from "@/lib/currency";
 
 export default function Cart() {
   const { user } = useAuth();
@@ -61,7 +62,7 @@ export default function Cart() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} items)</span>
-                    <span className="font-medium">${cartTotal.toFixed(2)}</span>
+                    <span className="font-medium">{formatPrice(cartTotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Shipping</span>
@@ -70,7 +71,7 @@ export default function Cart() {
                 </div>
                 <div className="border-t pt-4 flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span className="text-primary">${cartTotal.toFixed(2)}</span>
+                  <span className="text-primary">{formatPrice(cartTotal)}</span>
                 </div>
                 <Button className="w-full h-12" size="lg" asChild>
                   <Link to="/checkout">

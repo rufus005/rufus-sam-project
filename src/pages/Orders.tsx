@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { formatPrice } from "@/lib/currency";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,7 +59,7 @@ export default function Orders() {
                     <Badge variant={order.status === "delivered" ? "default" : "secondary"} className="capitalize">
                       {order.status}
                     </Badge>
-                    <span className="font-bold">${Number(order.total).toFixed(2)}</span>
+                    <span className="font-bold">{formatPrice(order.total)}</span>
                   </div>
                 </div>
                 <div className="text-sm text-muted-foreground">

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { formatPrice } from "@/lib/currency";
 
 interface CartItemProps {
   item: {
@@ -43,7 +44,7 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
         >
           {item.product.name}
         </Link>
-        <p className="text-base font-bold text-primary mt-1">${Number(item.product.price).toFixed(2)}</p>
+        <p className="text-base font-bold text-primary mt-1">{formatPrice(item.product.price)}</p>
         <div className="flex items-center gap-3 mt-2">
           <div className="flex items-center border rounded-lg bg-secondary/50">
             <Button
@@ -75,7 +76,7 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
         </div>
       </div>
       <div className="text-right shrink-0">
-        <p className="font-bold">${lineTotal.toFixed(2)}</p>
+        <p className="font-bold">{formatPrice(lineTotal)}</p>
       </div>
     </div>
   );

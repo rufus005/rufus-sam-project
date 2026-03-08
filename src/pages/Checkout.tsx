@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck } from "lucide-react";
+import { formatPrice } from "@/lib/currency";
 
 declare global {
   interface Window {
@@ -216,13 +217,13 @@ export default function Checkout() {
                     <p className="font-medium text-sm truncate">{item.product.name}</p>
                     <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                   </div>
-                  <p className="font-bold text-sm">${(item.product.price * item.quantity).toFixed(2)}</p>
+                  <p className="font-bold text-sm">{formatPrice(item.product.price * item.quantity)}</p>
                 </div>
               ))}
             </div>
             <div className="flex justify-between items-center mt-6 p-5 bg-primary/5 rounded-2xl border border-primary/10">
               <span className="text-lg font-bold">Total</span>
-              <span className="text-xl font-bold text-primary">${cartTotal.toFixed(2)}</span>
+              <span className="text-xl font-bold text-primary">{formatPrice(cartTotal)}</span>
             </div>
             <Button className="w-full mt-6 h-12" size="lg" onClick={() => setStep(1)}>
               Continue to Address
@@ -286,12 +287,12 @@ export default function Checkout() {
                 {items.map((item) => (
                   <div key={item.id} className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{item.product.name} × {item.quantity}</span>
-                    <span className="font-medium">${(item.product.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-medium">{formatPrice(item.product.price * item.quantity)}</span>
                   </div>
                 ))}
                 <div className="border-t pt-3 flex justify-between font-bold">
                   <span>Total</span>
-                  <span className="text-primary">${cartTotal.toFixed(2)}</span>
+                  <span className="text-primary">{formatPrice(cartTotal)}</span>
                 </div>
               </div>
 
@@ -368,7 +369,7 @@ export default function Checkout() {
                     ? "Processing..."
                     : paymentMethod === "cod"
                     ? "Place Order (COD)"
-                    : `Pay $${cartTotal.toFixed(2)}`}
+                    : `Pay ${formatPrice(cartTotal)}`}
                 </Button>
               </div>
 

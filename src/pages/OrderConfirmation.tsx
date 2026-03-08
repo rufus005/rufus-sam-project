@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { formatPrice } from "@/lib/currency";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
@@ -35,7 +36,7 @@ export default function OrderConfirmation() {
             <p className="text-sm text-muted-foreground mb-1">Order ID</p>
             <p className="font-mono text-sm mb-4">{order.id}</p>
             <p className="text-sm text-muted-foreground mb-1">Total</p>
-            <p className="font-bold text-lg mb-4">${Number(order.total).toFixed(2)}</p>
+            <p className="font-bold text-lg mb-4">{formatPrice(order.total)}</p>
             <p className="text-sm text-muted-foreground mb-1">Status</p>
             <p className="capitalize">{order.status}</p>
 
@@ -45,7 +46,7 @@ export default function OrderConfirmation() {
                 {order.order_items.map((item: any) => (
                   <div key={item.id} className="flex justify-between text-sm py-1">
                     <span>{item.product_name} × {item.quantity}</span>
-                    <span>${(Number(item.price) * item.quantity).toFixed(2)}</span>
+                    <span>{formatPrice(Number(item.price) * item.quantity)}</span>
                   </div>
                 ))}
               </div>

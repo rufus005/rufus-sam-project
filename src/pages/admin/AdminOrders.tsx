@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { formatPrice } from "@/lib/currency";
 import { ShoppingCart } from "lucide-react";
 
 const statuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
@@ -111,7 +112,7 @@ export default function AdminOrders() {
                           {(order as any).order_items?.length ?? 0}
                         </span>
                       </TableCell>
-                      <TableCell className="font-bold">${Number(order.total).toFixed(2)}</TableCell>
+                      <TableCell className="font-bold">{formatPrice(order.total)}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${paymentBadgeClass(order.payment_status)}`}>
                           {order.payment_status}

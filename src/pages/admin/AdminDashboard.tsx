@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatPrice } from "@/lib/currency";
 import { Package, ShoppingCart, Users, DollarSign, TrendingUp, ArrowUpRight } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -40,7 +41,7 @@ export default function AdminDashboard() {
   const s = stats.data;
 
   const cards = [
-    { label: "Total Revenue", value: s ? `$${s.revenue.toFixed(2)}` : "—", icon: DollarSign, href: "/admin/orders", color: "text-accent bg-accent/10" },
+    { label: "Total Revenue", value: s ? formatPrice(s.revenue) : "—", icon: DollarSign, href: "/admin/orders", color: "text-accent bg-accent/10" },
     { label: "Orders", value: s?.orders ?? "—", icon: ShoppingCart, href: "/admin/orders", color: "text-primary bg-primary/10" },
     { label: "Products", value: s?.products ?? "—", icon: Package, href: "/admin/products", color: "text-orange-500 bg-orange-500/10" },
     { label: "Customers", value: s?.users ?? "—", icon: Users, href: "/admin", color: "text-purple-500 bg-purple-500/10" },
@@ -97,7 +98,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-sm">${Number(order.total).toFixed(2)}</p>
+                      <p className="font-bold text-sm">{formatPrice(order.total)}</p>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
                         order.payment_status === "paid"
                           ? "bg-accent/10 text-accent"

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { ShoppingCart, Minus, Plus, ArrowLeft, Star, Zap, Truck, Shield, RotateCcw } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
+import { formatPrice } from "@/lib/currency";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 
@@ -159,9 +160,9 @@ export default function ProductDetail() {
             )}
 
             <div className="flex items-baseline gap-3 mb-6">
-              <span className="text-3xl md:text-4xl font-bold text-primary">${Number(product.price).toFixed(2)}</span>
+              <span className="text-3xl md:text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
               {product.compare_at_price && (
-                <span className="text-lg text-muted-foreground line-through">${Number(product.compare_at_price).toFixed(2)}</span>
+                <span className="text-lg text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
               )}
             </div>
 
