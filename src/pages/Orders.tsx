@@ -1,11 +1,16 @@
 import { Link } from "react-router-dom";
 import { formatPrice } from "@/lib/currency";
+import { downloadInvoice, shareInvoiceViaWhatsApp, shareInvoiceViaEmail, copyInvoiceDetails } from "@/lib/invoice";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Package, ShoppingBag, Calendar, ChevronRight, AlertTriangle } from "lucide-react";
+import { Package, ShoppingBag, Calendar, ChevronRight, AlertTriangle, Download, Share2, Copy, Mail, MessageCircle } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
@@ -32,6 +37,12 @@ export default function Orders() {
       return data;
     },
   });
+
+  const handleCopyInvoice = async (order: any) => {
+    const text = copyInvoiceDetails(order);
+    await navigator.clipboard.writeText(text);
+    toast({ title: "Invoice details copied to clipboard" });
+  };
 
   if (!user) {
     return (
@@ -109,7 +120,7 @@ export default function Orders() {
                       <span className="font-bold text-lg">{formatPrice(order.total)}</span>
                     </div>
                   </div>
-                  {/* Items preview */}
+                  {/* Items preview + actions */}
                   <div className="p-5">
                     <div className="flex items-center gap-3">
                       <div className="flex -space-x-2">
@@ -125,9 +136,43 @@ export default function Orders() {
                         )}
                       </div>
                       <span className="text-sm text-muted-foreground flex-1">{orderItems.length} item{orderItems.length !== 1 ? "s" : ""}</span>
-                      <Link to={`/order-confirmation/${order.id}`} className="flex items-center gap-1 text-sm text-primary font-medium hover:underline">
-                        Details <ChevronRight className="h-4 w-4" />
-                      </Link>
+
+                      {/* Invoice actions */}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => downloadInvoice(order as any)}
+                          className="h-8 w-8 rounded-lg bg-secondary/60 flex items-center justify-center hover:bg-secondary transition-colors"
+                          title="Download Invoice"
+                        >
+                          <Download className="h-4 w-4 text-muted-foreground" />
+                        </button>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="h-8 w-8 rounded-lg bg-secondary/60 flex items-center justify-center hover:bg-secondary transition-colors"
+                              title="Share Invoice"
+                            >
+                              <Share2 className="h-4 w-4 text-muted-foreground" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={() => handleCopyInvoice(order)} className="gap-2">
+                              <Copy className="h-4 w-4" /> Copy Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => shareInvoiceViaEmail(order as any)} className="gap-2">
+                              <Mail className="h-4 w-4" /> Share via Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => shareInvoiceViaWhatsApp(order as any)} className="gap-2">
+                              <MessageCircle className="h-4 w-4" /> Share via WhatsApp
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Link to={`/order-confirmation/${order.id}`} className="flex items-center gap-1 text-sm text-primary font-medium hover:underline ml-1">
+                          Details <ChevronRight className="h-4 w-4" />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
