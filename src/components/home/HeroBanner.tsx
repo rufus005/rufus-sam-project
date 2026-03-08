@@ -3,8 +3,24 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
-const slides = [
+interface Slide {
+  badge: string;
+  headline: string;
+  highlight: string;
+  subtitle: string;
+  cta: string;
+  ctaLink: string;
+  secondaryCta: string;
+  secondaryCtaLoggedIn: string;
+  secondaryLink: string;
+  secondaryLinkLoggedIn: string;
+  gradient: string;
+  accent: string;
+}
+
+const slides: Slide[] = [
   {
     badge: "New Season Collection",
     headline: "Discover Quality",
@@ -13,7 +29,9 @@ const slides = [
     cta: "Shop Now",
     ctaLink: "/products",
     secondaryCta: "Create Account",
+    secondaryCtaLoggedIn: "My Profile",
     secondaryLink: "/register",
+    secondaryLinkLoggedIn: "/profile",
     gradient: "from-primary/10 via-background to-accent/5",
     accent: "from-primary to-accent",
   },
@@ -25,7 +43,9 @@ const slides = [
     cta: "Shop Sale",
     ctaLink: "/products",
     secondaryCta: "View Trending",
+    secondaryCtaLoggedIn: "View Trending",
     secondaryLink: "/products",
+    secondaryLinkLoggedIn: "/products",
     gradient: "from-accent/10 via-background to-primary/5",
     accent: "from-accent to-primary",
   },
@@ -37,7 +57,9 @@ const slides = [
     cta: "Explore Now",
     ctaLink: "/products",
     secondaryCta: "Browse Categories",
+    secondaryCtaLoggedIn: "Browse Categories",
     secondaryLink: "/products",
+    secondaryLinkLoggedIn: "/products",
     gradient: "from-primary/8 via-background to-secondary/10",
     accent: "from-primary via-accent to-primary",
   },
@@ -46,6 +68,7 @@ const slides = [
 const INTERVAL = 6000;
 
 export default function HeroBanner() {
+  const { user } = useAuth();
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
 
@@ -73,6 +96,8 @@ export default function HeroBanner() {
   }, [next]);
 
   const slide = slides[current];
+  const secondaryText = user ? slide.secondaryCtaLoggedIn : slide.secondaryCta;
+  const secondaryHref = user ? slide.secondaryLinkLoggedIn : slide.secondaryLink;
 
   const variants = {
     enter: (d: number) => ({ x: d > 0 ? 80 : -80, opacity: 0 }),
@@ -137,7 +162,7 @@ export default function HeroBanner() {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="h-12 px-8 text-base hover-scale" asChild>
-                <Link to={slide.secondaryLink}>{slide.secondaryCta}</Link>
+                <Link to={secondaryHref}>{secondaryText}</Link>
               </Button>
             </div>
           </motion.div>
