@@ -17,8 +17,6 @@ declare global {
   }
 }
 
-const RAZORPAY_KEY = "rzp_test_XXXXXXXXXXXXXXX"; // Replace with your Razorpay test key
-
 const STEPS = [
   { label: "Cart Summary", icon: ShoppingCart },
   { label: "Address", icon: MapPin },
