@@ -12,11 +12,6 @@ import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck, AlertTr
 import { formatPrice } from "@/lib/currency";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 const STEPS = [
   { label: "Cart Summary", icon: ShoppingCart },
