@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
+import CartItem from "@/components/CartItem";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { ShoppingBag, ArrowRight, ShieldCheck } from "lucide-react";
 
 export default function Cart() {
   const { user } = useAuth();
@@ -12,10 +13,13 @@ export default function Cart() {
   if (!user) {
     return (
       <Layout>
-        <div className="container py-16 text-center">
-          <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+        <div className="container py-20 text-center max-w-md mx-auto">
+          <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <ShoppingBag className="h-10 w-10 text-primary" />
+          </div>
           <h1 className="text-2xl font-bold mb-2">Sign in to view your cart</h1>
-          <Button asChild className="mt-4"><Link to="/login">Sign In</Link></Button>
+          <p className="text-muted-foreground mb-6">You need an account to manage your cart items.</p>
+          <Button size="lg" asChild><Link to="/login">Sign In</Link></Button>
         </div>
       </Layout>
     );
@@ -23,78 +27,61 @@ export default function Cart() {
 
   return (
     <Layout>
-      <div className="container py-8 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+      <div className="container py-8 md:py-12 max-w-5xl">
+        <h1 className="text-3xl md:text-4xl font-bold mb-2">Shopping Cart</h1>
+        <p className="text-muted-foreground mb-8">{items.length} item{items.length !== 1 ? "s" : ""} in your cart</p>
 
         {isLoading ? (
           <div className="text-muted-foreground">Loading...</div>
         ) : items.length === 0 ? (
-          <div className="text-center py-16">
-            <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <div className="text-center py-20 max-w-md mx-auto">
+            <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
+              <ShoppingBag className="h-10 w-10 text-muted-foreground" />
+            </div>
             <h2 className="text-xl font-semibold mb-2">Your cart is empty</h2>
-            <p className="text-muted-foreground mb-4">Browse our products and add items to your cart.</p>
-            <Button asChild><Link to="/products">Shop Now</Link></Button>
+            <p className="text-muted-foreground mb-6">Browse our products and add items to your cart.</p>
+            <Button size="lg" asChild><Link to="/products">Shop Now</Link></Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-3">
               {items.map((item) => (
-                <div key={item.id} className="flex gap-4 border rounded-lg p-4">
-                  <Link to={`/products/${item.product.slug}`} className="shrink-0">
-                    <div className="h-20 w-20 bg-muted rounded flex items-center justify-center overflow-hidden">
-                      {item.product.image_url ? (
-                        <img src={item.product.image_url} alt={item.product.name} className="object-cover h-full w-full" />
-                      ) : (
-                        <span className="text-xs text-muted-foreground">No img</span>
-                      )}
-                    </div>
-                  </Link>
-                  <div className="flex-1 min-w-0">
-                    <Link to={`/products/${item.product.slug}`} className="font-semibold hover:text-primary transition-colors line-clamp-1">
-                      {item.product.name}
-                    </Link>
-                    <p className="text-lg font-bold mt-1">${Number(item.product.price).toFixed(2)}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="flex items-center border rounded-md">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity.mutate({ itemId: item.id, quantity: item.quantity - 1 })}>
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="w-8 text-center text-sm">{item.quantity}</span>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity.mutate({ itemId: item.id, quantity: item.quantity + 1 })}>
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeItem.mutate(item.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="text-right font-bold">
-                    ${(Number(item.product.price) * item.quantity).toFixed(2)}
-                  </div>
-                </div>
+                <CartItem
+                  key={item.id}
+                  item={item}
+                  onUpdateQuantity={(itemId, quantity) => updateQuantity.mutate({ itemId, quantity })}
+                  onRemove={(itemId) => removeItem.mutate(itemId)}
+                />
               ))}
             </div>
 
-            <div className="border rounded-lg p-6 h-fit">
-              <h3 className="font-heading font-semibold text-lg mb-4">Order Summary</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>${cartTotal.toFixed(2)}</span>
+            <div className="lg:col-span-1">
+              <div className="border rounded-2xl p-6 bg-card sticky top-24 space-y-4">
+                <h3 className="font-heading font-bold text-lg">Order Summary</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} items)</span>
+                    <span className="font-medium">${cartTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span className="text-accent font-medium">Free</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span className="text-accent">Free</span>
+                <div className="border-t pt-4 flex justify-between font-bold text-lg">
+                  <span>Total</span>
+                  <span className="text-primary">${cartTotal.toFixed(2)}</span>
+                </div>
+                <Button className="w-full h-12" size="lg" asChild>
+                  <Link to="/checkout">
+                    Proceed to Checkout <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>Secure checkout</span>
                 </div>
               </div>
-              <div className="border-t mt-4 pt-4 flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span>${cartTotal.toFixed(2)}</span>
-              </div>
-              <Button className="w-full mt-4" size="lg" asChild>
-                <Link to="/checkout">Proceed to Checkout</Link>
-              </Button>
             </div>
           </div>
         )}
