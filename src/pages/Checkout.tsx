@@ -223,7 +223,7 @@ export default function Checkout() {
             </div>
             <div className="flex justify-between items-center mt-6 p-5 bg-primary/5 rounded-2xl border border-primary/10">
               <span className="text-lg font-bold">Total</span>
-              <span className="text-xl font-bold text-primary">${cartTotal.toFixed(2)}</span>
+              <span className="text-xl font-bold text-primary">{formatPrice(cartTotal)}</span>
             </div>
             <Button className="w-full mt-6 h-12" size="lg" onClick={() => setStep(1)}>
               Continue to Address
