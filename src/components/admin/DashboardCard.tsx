@@ -9,6 +9,7 @@ interface DashboardCardProps {
   color: string;
   href?: string;
   trend?: string;
+  subtitle?: string;
 }
 
 export default function DashboardCard({ label, value, icon: Icon, color, trend }: DashboardCardProps) {
