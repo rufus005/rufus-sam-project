@@ -2,17 +2,83 @@ import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, Package, ShoppingCart, ArrowLeft, LogOut } from "lucide-react";
+import {
+  LayoutDashboard, Package, ShoppingCart, Users, Mail,
+  ArrowLeft, LogOut, Menu, ChevronLeft, ShoppingBag, Settings,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Products", href: "/admin/products", icon: Package },
   { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
+  { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Subscribers", href: "/admin/subscribers", icon: Mail },
 ];
 
+function SidebarContent({ pathname }: { pathname: string }) {
+  const { signOut } = useAuth();
+  return (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className="p-5 border-b border-border/50">
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center">
+            <ShoppingBag className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <span className="font-heading font-bold text-base">Rufus Sam</span>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Admin Panel</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-3 space-y-1">
+        <p className="px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Menu</p>
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+              }`}
+            >
+              <item.icon className="h-4.5 w-4.5" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div className="p-3 border-t border-border/50 space-y-1">
+        <Link
+          to="/"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Store
+        </Link>
+        <button
+          onClick={signOut}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -20,7 +86,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/login"); return; }
-
     supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => {
       if (!data) { navigate("/"); return; }
       setIsAdmin(true);
@@ -28,59 +93,59 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }, [user, loading, navigate]);
 
   if (loading || isAdmin === null) {
-    return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading admin panel...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-64 border-r bg-card hidden md:flex flex-col">
-        <div className="p-4 border-b">
-          <Link to="/" className="flex items-center gap-2 font-heading font-bold text-lg">
-            <ArrowLeft className="h-4 w-4" /> Rufus Sam
-          </Link>
-          <p className="text-xs text-muted-foreground mt-1">Admin Panel</p>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                location.pathname === item.href
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t">
-          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground" onClick={signOut}>
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
+    <div className="flex min-h-screen bg-background">
+      {/* Desktop sidebar */}
+      <aside className="w-64 border-r bg-card hidden lg:flex flex-col shrink-0 sticky top-0 h-screen">
+        <SidebarContent pathname={location.pathname} />
       </aside>
 
-      {/* Mobile nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card flex">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            to={item.href}
-            className={`flex-1 flex flex-col items-center gap-1 py-2 text-xs ${
-              location.pathname === item.href ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <item.icon className="h-4 w-4" />
-            {item.label}
-          </Link>
-        ))}
-      </div>
+      {/* Main */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <header className="sticky top-0 z-40 h-14 border-b bg-background/95 backdrop-blur flex items-center gap-3 px-4 lg:px-8">
+          {/* Mobile menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="lg:hidden shrink-0">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0">
+              <SheetTitle className="sr-only">Admin Navigation</SheetTitle>
+              <SidebarContent pathname={location.pathname} />
+            </SheetContent>
+          </Sheet>
 
-      <main className="flex-1 p-6 md:p-8 pb-20 md:pb-8">{children}</main>
+          <div className="flex-1">
+            <h2 className="text-sm font-semibold capitalize">
+              {navItems.find((n) => n.href === location.pathname)?.label ?? "Admin"}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground hidden sm:inline">{user?.email}</span>
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 lg:pb-8">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
