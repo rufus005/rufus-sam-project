@@ -8,8 +8,9 @@ import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 declare global {
   interface Window {
