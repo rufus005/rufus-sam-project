@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowRight, ShoppingBag, Truck, Shield, Star, Zap } from "lucide-react";
+import { formatPrice } from "@/lib/currency";
 import { motion } from "framer-motion";
 
 export default function Index() {
