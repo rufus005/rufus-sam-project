@@ -6,6 +6,8 @@ import FeaturesStrip from "@/components/home/FeaturesStrip";
 import PromoBanners from "@/components/home/PromoBanners";
 import CategoriesSection from "@/components/home/CategoriesSection";
 import ProductSection from "@/components/home/ProductSection";
+import WhyChooseUsSection from "@/components/home/WhyChooseUsSection";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
 import Banner from "@/components/Banner";
 import NewsletterSection from "@/components/NewsletterSection";
 import { useCart } from "@/hooks/useCart";
@@ -97,16 +99,18 @@ export default function Index() {
         isWishlisted={isInWishlist}
       />
 
+      <WhyChooseUsSection />
+      <TestimonialsSection />
       <NewsletterSection />
 
       <section className="container py-14 md:py-20">
         <Banner
           title="Ready to start shopping?"
           subtitle="Create your free account today and get access to exclusive deals and offers."
-          ctaText="Get Started"
-          ctaLink="/register"
-          secondaryCtaText="Browse Products"
-          secondaryCtaLink="/products"
+          ctaText={user ? "Browse Products" : "Get Started"}
+          ctaLink={user ? "/products" : "/register"}
+          secondaryCtaText={user ? "View Orders" : "Browse Products"}
+          secondaryCtaLink={user ? "/orders" : "/products"}
           variant="primary"
           align="center"
         />
