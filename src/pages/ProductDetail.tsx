@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Minus, Plus, Star, Zap, Truck, Shield, RotateCcw, Heart } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Star, Zap, Truck, Shield, RotateCcw, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { formatPrice } from "@/lib/currency";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import ProductGrid from "@/components/ProductGrid";
 
 export default function ProductDetail() {
@@ -81,6 +81,15 @@ export default function ProductDetail() {
   const allImages = product
     ? [product.image_url, ...(product.images || [])].filter(Boolean) as string[]
     : [];
+
+  const goToImage = (dir: number) => {
+    setSelectedImage((prev) => {
+      const next = prev + dir;
+      if (next < 0) return allImages.length - 1;
+      if (next >= allImages.length) return 0;
+      return next;
+    });
+  };
 
   if (productQuery.isLoading) {
     return (
@@ -151,18 +160,53 @@ export default function ProductDetail() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image Gallery */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative">
-            <div className="aspect-square bg-muted rounded-2xl flex items-center justify-center overflow-hidden sticky top-24">
-              {allImages.length > 0 ? (
-                <img src={allImages[selectedImage] || allImages[0]} alt={product.name} className="object-cover w-full h-full" />
-              ) : (
-                <div className="text-muted-foreground">No image available</div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+            {/* Main Image with Slider */}
+            <div className="relative aspect-square bg-muted rounded-2xl overflow-hidden group">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={selectedImage}
+                  src={allImages[selectedImage] || "/placeholder.svg"}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                />
+              </AnimatePresence>
+
+              {/* Navigation Arrows */}
+              {allImages.length > 1 && (
+                <>
+                  <button
+                    onClick={() => goToImage(-1)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => goToImage(1)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
               )}
+
+              {/* Image counter */}
+              {allImages.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-card/80 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium shadow-sm">
+                  {selectedImage + 1} / {allImages.length}
+                </div>
+              )}
+
               {discount > 0 && (
                 <Badge className="absolute top-4 left-4 bg-destructive text-destructive-foreground text-sm font-bold px-3 py-1">
                   -{discount}% OFF
                 </Badge>
               )}
+
               {/* Wishlist */}
               <button
                 onClick={() => handleToggleWishlist(product.id)}
@@ -171,15 +215,18 @@ export default function ProductDetail() {
                 <Heart className={`h-5 w-5 transition-colors ${isInWishlist(product.id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
               </button>
             </div>
+
             {/* Thumbnails */}
             {allImages.length > 1 && (
-              <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+              <div className="flex gap-2 overflow-x-auto pb-1">
                 {allImages.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`h-16 w-16 rounded-lg overflow-hidden shrink-0 border-2 transition-colors ${
-                      selectedImage === i ? "border-primary" : "border-transparent hover:border-muted-foreground/30"
+                    className={`h-20 w-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all duration-200 ${
+                      selectedImage === i
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-transparent hover:border-muted-foreground/30 opacity-70 hover:opacity-100"
                     }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
