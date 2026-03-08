@@ -8,16 +8,10 @@ import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
-const RAZORPAY_KEY = "rzp_test_XXXXXXXXXXXXXXX"; // Replace with your Razorpay test key
 
 const STEPS = [
   { label: "Cart Summary", icon: ShoppingCart },
@@ -31,7 +25,9 @@ export default function Checkout() {
   const { items, cartTotal, clearCart, isLoading: cartLoading } = useCart();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">("razorpay");
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+  const [showPaymentSim, setShowPaymentSim] = useState(false);
+  const [paymentSimStep, setPaymentSimStep] = useState<"processing" | "success" | "idle">("idle");
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
@@ -173,52 +169,32 @@ export default function Checkout() {
     setLoading(false);
   };
 
-  const handleRazorpay = async () => {
-    if (typeof window.Razorpay === "undefined") {
-      toast({ title: "Payment gateway not loaded", description: "Please refresh the page and try again.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    try {
-      const amountInPaise = Math.round(cartTotal * 100);
-      const options = {
-        key: RAZORPAY_KEY,
-        amount: amountInPaise,
-        currency: "INR",
-        name: "Rufus Sam Store",
-        description: `Order of ${items.length} item(s)`,
-        handler: async (response: any) => {
-          try {
-            await placeOrder(response.razorpay_payment_id, "paid");
-            toast({ title: "Payment successful! Order placed." });
-          } catch (err: any) {
-            toast({ title: "Order failed after payment", description: err.message, variant: "destructive" });
-          }
-        },
-        prefill: { name: form.fullName, email: user.email ?? "", contact: form.phone },
-        theme: { color: "hsl(217, 91%, 60%)" },
-        modal: { ondismiss: () => setLoading(false) },
-      };
-      const rzp = new window.Razorpay(options);
-      rzp.on("payment.failed", async (response: any) => {
+  const handleOnlinePayment = () => {
+    setShowPaymentSim(true);
+    setPaymentSimStep("processing");
+    // Simulate payment processing (2 seconds)
+    setTimeout(() => {
+      setPaymentSimStep("success");
+      // After showing success, place the order
+      setTimeout(async () => {
+        setLoading(true);
         try {
-          await placeOrder(response.error.metadata?.payment_id ?? "failed", "failed");
-          toast({ title: "Payment failed, order saved.", variant: "destructive" });
+          const fakePaymentId = "sim_pay_" + Date.now();
+          await placeOrder(fakePaymentId, "paid");
+          toast({ title: "Payment successful! Order placed." });
         } catch (err: any) {
           toast({ title: "Order failed", description: err.message, variant: "destructive" });
         }
+        setShowPaymentSim(false);
+        setPaymentSimStep("idle");
         setLoading(false);
-      });
-      rzp.open();
-    } catch (err: any) {
-      toast({ title: "Payment error", description: err.message, variant: "destructive" });
-      setLoading(false);
-    }
+      }, 1500);
+    }, 2000);
   };
 
   const handlePayment = () => {
     if (paymentMethod === "cod") handleCOD();
-    else handleRazorpay();
+    else handleOnlinePayment();
   };
 
   // Check for out-of-stock items
@@ -387,26 +363,26 @@ export default function Checkout() {
                 <div className="space-y-2">
                   <label
                     className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      paymentMethod === "razorpay" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                      paymentMethod === "online" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
                     }`}
                   >
                     <input
                       type="radio"
                       name="payment"
-                      value="razorpay"
-                      checked={paymentMethod === "razorpay"}
-                      onChange={() => setPaymentMethod("razorpay")}
+                      value="online"
+                      checked={paymentMethod === "online"}
+                      onChange={() => setPaymentMethod("online")}
                       className="sr-only"
                     />
                     <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      paymentMethod === "razorpay" ? "border-primary" : "border-muted-foreground"
+                      paymentMethod === "online" ? "border-primary" : "border-muted-foreground"
                     }`}>
-                      {paymentMethod === "razorpay" && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
+                      {paymentMethod === "online" && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
                     </div>
                     <CreditCard className="h-5 w-5 text-primary" />
                     <div>
-                      <p className="font-medium text-sm">Pay with Razorpay</p>
-                      <p className="text-xs text-muted-foreground">Credit/Debit Card, UPI, Net Banking</p>
+                      <p className="font-medium text-sm">Pay Online</p>
+                      <p className="text-xs text-muted-foreground">Simulated payment (Credit/Debit Card, UPI)</p>
                     </div>
                   </label>
                   <label
@@ -449,11 +425,40 @@ export default function Checkout() {
 
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span>{paymentMethod === "razorpay" ? "🔒 Razorpay Test Mode — No real charges" : "💰 Cash on Delivery — Pay when received"}</span>
+                <span>{paymentMethod === "online" ? "🔒 Simulated Payment — No real charges" : "💰 Cash on Delivery — Pay when received"}</span>
               </div>
             </div>
           </div>
         )}
+
+        {/* Fake Payment Simulation Dialog */}
+        <Dialog open={showPaymentSim} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+            <DialogHeader>
+              <DialogTitle>
+                {paymentSimStep === "processing" ? "Processing Payment..." : "Payment Successful!"}
+              </DialogTitle>
+              <DialogDescription>
+                {paymentSimStep === "processing"
+                  ? `Charging ${formatPrice(cartTotal)} to your account`
+                  : "Your payment has been confirmed"}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center py-8 gap-4">
+              {paymentSimStep === "processing" && (
+                <Loader2 className="h-12 w-12 text-primary animate-spin" />
+              )}
+              {paymentSimStep === "success" && (
+                <CheckCircle2 className="h-12 w-12 text-green-500" />
+              )}
+              <p className="text-sm text-muted-foreground text-center">
+                {paymentSimStep === "processing"
+                  ? "Please wait while we process your payment..."
+                  : "Redirecting to order confirmation..."}
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
