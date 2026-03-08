@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,18 +6,56 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Mail, Shield, CheckCircle } from "lucide-react";
+import { Mail, Shield, CheckCircle, Clock } from "lucide-react";
+
+const COOLDOWN_KEY = "admin_magic_link_cooldown";
+const COOLDOWN_SECONDS = 60;
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const navigate = useNavigate();
+
+  // Restore cooldown from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(COOLDOWN_KEY);
+    if (stored) {
+      const remaining = Math.max(0, Math.ceil((Number(stored) - Date.now()) / 1000));
+      if (remaining > 0) setCooldown(remaining);
+    }
+  }, []);
+
+  // Countdown timer
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const startCooldown = useCallback(() => {
+    const expiresAt = Date.now() + COOLDOWN_SECONDS * 1000;
+    localStorage.setItem(COOLDOWN_KEY, String(expiresAt));
+    setCooldown(COOLDOWN_SECONDS);
+  }, []);
 
   const handleSendMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       toast.error("Please enter your email");
+      return;
+    }
+    if (cooldown > 0) {
+      toast.error(`Please wait ${cooldown}s before requesting another link`);
       return;
     }
     setLoading(true);
@@ -28,9 +66,15 @@ export default function AdminLogin() {
       },
     });
     if (error) {
-      toast.error(error.message);
+      if (error.message?.toLowerCase().includes("rate limit")) {
+        toast.error("Email rate limit exceeded. Please wait a few minutes before trying again.");
+        startCooldown();
+      } else {
+        toast.error(error.message);
+      }
     } else {
       setSent(true);
+      startCooldown();
       toast.success("Magic link sent! Check your email.");
     }
     setLoading(false);
@@ -65,13 +109,19 @@ export default function AdminLogin() {
                   />
                 </div>
               </div>
+              {cooldown > 0 && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+                  <Clock className="h-4 w-4 shrink-0" />
+                  <span>You can request another link in <strong>{cooldown}s</strong></span>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 A magic link will be sent to your email. Only users with admin privileges can access the dashboard.
               </p>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full h-11" disabled={loading}>
-                {loading ? "Sending..." : "Send Magic Link"}
+              <Button type="submit" className="w-full h-11" disabled={loading || cooldown > 0}>
+                {loading ? "Sending..." : cooldown > 0 ? `Wait ${cooldown}s` : "Send Magic Link"}
               </Button>
             </CardFooter>
           </form>
@@ -88,8 +138,9 @@ export default function AdminLogin() {
               variant="outline"
               className="mt-4"
               onClick={() => { setSent(false); setEmail(""); }}
+              disabled={cooldown > 0}
             >
-              Use a different email
+              {cooldown > 0 ? `Use different email (${cooldown}s)` : "Use a different email"}
             </Button>
           </CardContent>
         )}
