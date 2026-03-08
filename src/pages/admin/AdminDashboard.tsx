@@ -41,7 +41,7 @@ export default function AdminDashboard() {
   const s = stats.data;
 
   const cards = [
-    { label: "Total Revenue", value: s ? `$${s.revenue.toFixed(2)}` : "—", icon: DollarSign, href: "/admin/orders", color: "text-accent bg-accent/10" },
+    { label: "Total Revenue", value: s ? formatPrice(s.revenue) : "—", icon: DollarSign, href: "/admin/orders", color: "text-accent bg-accent/10" },
     { label: "Orders", value: s?.orders ?? "—", icon: ShoppingCart, href: "/admin/orders", color: "text-primary bg-primary/10" },
     { label: "Products", value: s?.products ?? "—", icon: Package, href: "/admin/products", color: "text-orange-500 bg-orange-500/10" },
     { label: "Customers", value: s?.users ?? "—", icon: Users, href: "/admin", color: "text-purple-500 bg-purple-500/10" },
