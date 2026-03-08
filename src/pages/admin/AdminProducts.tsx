@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, X, ImageIcon } from "lucide-react";
 
 interface ProductForm {
   name: string;
@@ -36,7 +36,8 @@ export default function AdminProducts() {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
 
   const productsQuery = useQuery({
     queryKey: ["admin-products"],
@@ -56,9 +57,9 @@ export default function AdminProducts() {
     },
   });
 
-  const uploadImage = async (file: File, productId: string) => {
+  const uploadImage = async (file: File, productId: string, index: number) => {
     const ext = file.name.split(".").pop();
-    const path = `${productId}.${ext}`;
+    const path = `${productId}_${index}_${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
     if (error) throw error;
     const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
@@ -68,7 +69,7 @@ export default function AdminProducts() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const slug = form.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      const payload = {
+      const payload: any = {
         name: form.name,
         slug,
         description: form.description || null,
@@ -90,17 +91,30 @@ export default function AdminProducts() {
         productId = data.id;
       }
 
-      if (imageFile && productId) {
-        const imageUrl = await uploadImage(imageFile, productId);
-        await supabase.from("products").update({ image_url: imageUrl }).eq("id", productId);
+      // Upload new images
+      const newImageUrls: string[] = [];
+      for (let i = 0; i < imageFiles.length; i++) {
+        const url = await uploadImage(imageFiles[i], productId!, i);
+        newImageUrls.push(url);
       }
+
+      // Combine existing + new
+      const allImages = [...existingImages, ...newImageUrls];
+      const imageUrl = allImages[0] || null;
+      const additionalImages = allImages.slice(1);
+
+      await supabase.from("products").update({
+        image_url: imageUrl,
+        images: additionalImages,
+      }).eq("id", productId!);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-products"] });
       setOpen(false);
       setEditId(null);
       setForm(emptyForm);
-      setImageFile(null);
+      setImageFiles([]);
+      setExistingImages([]);
       toast({ title: editId ? "Product updated" : "Product created" });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -130,16 +144,42 @@ export default function AdminProducts() {
       stock_quantity: String(product.stock_quantity),
       is_active: product.is_active,
     });
-    setImageFile(null);
+    // Load existing images
+    const imgs: string[] = [];
+    if (product.image_url) imgs.push(product.image_url);
+    if (product.images?.length) imgs.push(...product.images);
+    setExistingImages(imgs);
+    setImageFiles([]);
     setOpen(true);
   };
 
   const openNew = () => {
     setEditId(null);
     setForm(emptyForm);
-    setImageFile(null);
+    setImageFiles([]);
+    setExistingImages([]);
     setOpen(true);
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const totalImages = existingImages.length + imageFiles.length + files.length;
+    if (totalImages > 4) {
+      toast({ title: "Maximum 4 images allowed", variant: "destructive" });
+      return;
+    }
+    setImageFiles((prev) => [...prev, ...files]);
+  };
+
+  const removeExistingImage = (index: number) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const totalImages = existingImages.length + imageFiles.length;
 
   const set = (field: keyof ProductForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -147,7 +187,10 @@ export default function AdminProducts() {
   return (
     <AdminLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Products</h1>
+        <div>
+          <h1 className="text-3xl font-bold">Products</h1>
+          <p className="text-muted-foreground mt-1">{productsQuery.data?.length ?? 0} products</p>
+        </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" /> Add Product</Button>
@@ -196,16 +239,70 @@ export default function AdminProducts() {
                   <Input type="number" value={form.stock_quantity} onChange={set("stock_quantity")} />
                 </div>
               </div>
+
+              {/* Multi-Image Upload */}
               <div>
-                <Label>Product Image</Label>
-                <div className="mt-1">
-                  <label className="flex items-center gap-2 cursor-pointer border rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors">
-                    <Upload className="h-4 w-4" />
-                    {imageFile ? imageFile.name : "Choose file..."}
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
+                <Label>Product Images ({totalImages}/4)</Label>
+                <p className="text-xs text-muted-foreground mb-2">Upload up to 4 images. First image is the main product image.</p>
+
+                {/* Existing images */}
+                {(existingImages.length > 0 || imageFiles.length > 0) && (
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {existingImages.map((url, i) => (
+                      <div key={`existing-${i}`} className="relative group aspect-square rounded-lg overflow-hidden border bg-muted">
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        {i === 0 && (
+                          <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded">
+                            MAIN
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(i)}
+                          className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {imageFiles.map((file, i) => (
+                      <div key={`new-${i}`} className="relative group aspect-square rounded-lg overflow-hidden border bg-muted">
+                        <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                        {existingImages.length === 0 && i === 0 && (
+                          <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded">
+                            MAIN
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeNewImage(i)}
+                          className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {totalImages < 4 && (
+                  <label className="flex flex-col items-center justify-center gap-2 cursor-pointer border-2 border-dashed rounded-xl px-4 py-6 text-sm hover:bg-muted/50 transition-colors">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Upload className="h-5 w-5 text-primary" />
+                    </div>
+                    <span className="text-muted-foreground">Click to upload images</span>
+                    <span className="text-xs text-muted-foreground">PNG, JPG up to 5MB each</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
                   </label>
-                </div>
+                )}
               </div>
+
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="isActive" checked={form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} />
                 <Label htmlFor="isActive">Active</Label>
@@ -218,66 +315,76 @@ export default function AdminProducts() {
         </Dialog>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      <div className="rounded-2xl border bg-card overflow-hidden shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-secondary/30">
               <TableHead>Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Price</TableHead>
               <TableHead>Stock</TableHead>
+              <TableHead>Images</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {productsQuery.data?.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>
-                  <div className="h-10 w-10 bg-muted rounded flex items-center justify-center overflow-hidden">
-                    {product.image_url ? (
-                      <img src={product.image_url} alt="" className="object-cover h-full w-full" />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">{product.name}</TableCell>
-                <TableCell>{(product as any).categories?.name ?? "—"}</TableCell>
-                <TableCell>{formatPrice(product.price)}</TableCell>
-                <TableCell>{product.stock_quantity}</TableCell>
-                <TableCell>
-                  <Badge variant={product.is_active ? "default" : "secondary"}>
-                    {product.is_active ? "Active" : "Draft"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(product)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete product?</AlertDialogTitle>
-                          <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteMutation.mutate(product.id)}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+            {productsQuery.data?.map((product) => {
+              const imgCount = 1 + (product.images?.length ?? 0);
+              return (
+                <TableRow key={product.id} className="hover:bg-secondary/20">
+                  <TableCell>
+                    <div className="h-10 w-10 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                      {product.image_url ? (
+                        <img src={product.image_url} alt="" className="object-cover h-full w-full" />
+                      ) : (
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{(product as any).categories?.name ?? "—"}</TableCell>
+                  <TableCell>{formatPrice(product.price)}</TableCell>
+                  <TableCell>{product.stock_quantity}</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <ImageIcon className="h-3 w-3" />
+                      {product.image_url ? imgCount : 0}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={product.is_active ? "default" : "secondary"}>
+                      {product.is_active ? "Active" : "Draft"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(product)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete product?</AlertDialogTitle>
+                            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteMutation.mutate(product.id)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
