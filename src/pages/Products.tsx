@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,8 +6,9 @@ import Layout from "@/components/layout/Layout";
 import ProductGrid from "@/components/ProductGrid";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, Package } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Products() {
@@ -21,6 +22,7 @@ export default function Products() {
 
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
@@ -51,15 +53,27 @@ export default function Products() {
     addToCart.mutate({ productId });
   };
 
+  const handleToggleWishlist = (productId: string) => {
+    if (!user) { window.location.href = "/login"; return; }
+    toggleWishlist.mutate(productId);
+  };
+
   return (
     <Layout>
       <div className="container py-8 md:py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Products</h1>
-          <p className="text-muted-foreground">
-            {productsQuery.data ? `${productsQuery.data.length} products found` : "Browse our collection"}
-          </p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Package className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold">Products</h1>
+              <p className="text-muted-foreground text-sm">
+                {productsQuery.data ? `${productsQuery.data.length} products found` : "Browse our collection"}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Filters */}
@@ -102,6 +116,8 @@ export default function Products() {
           products={(productsQuery.data as any[]) ?? []}
           isLoading={productsQuery.isLoading}
           onAddToCart={handleAddToCart}
+          onToggleWishlist={handleToggleWishlist}
+          isWishlisted={isInWishlist}
         />
       </div>
     </Layout>

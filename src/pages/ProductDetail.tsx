@@ -7,18 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Minus, Plus, ArrowLeft, Star, Zap, Truck, Shield, RotateCcw } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Star, Zap, Truck, Shield, RotateCcw, Heart } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
 import { formatPrice } from "@/lib/currency";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
+import ProductGrid from "@/components/ProductGrid";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
 
   const productQuery = useQuery({
     queryKey: ["product", slug],
@@ -48,6 +52,24 @@ export default function ProductDetail() {
   });
 
   const product = productQuery.data;
+
+  const relatedQuery = useQuery({
+    queryKey: ["related-products", product?.category_id, product?.id],
+    enabled: !!product,
+    queryFn: async () => {
+      let q = supabase
+        .from("products")
+        .select("*, categories(name, slug)")
+        .eq("is_active", true)
+        .neq("id", product!.id)
+        .limit(4);
+      if (product!.category_id) q = q.eq("category_id", product!.category_id);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const avgRating = reviewsQuery.data?.length
     ? reviewsQuery.data.reduce((s, r) => s + r.rating, 0) / reviewsQuery.data.length
     : 0;
@@ -55,6 +77,10 @@ export default function ProductDetail() {
   const discount = product?.compare_at_price
     ? Math.round((1 - Number(product.price) / Number(product.compare_at_price)) * 100)
     : 0;
+
+  const allImages = product
+    ? [product.image_url, ...(product.images || [])].filter(Boolean) as string[]
+    : [];
 
   if (productQuery.isLoading) {
     return (
@@ -97,6 +123,16 @@ export default function ProductDetail() {
     });
   };
 
+  const handleRelatedAddToCart = (productId: string) => {
+    if (!user) { navigate("/login"); return; }
+    addToCart.mutate({ productId });
+  };
+
+  const handleToggleWishlist = (productId: string) => {
+    if (!user) { navigate("/login"); return; }
+    toggleWishlist.mutate(productId);
+  };
+
   return (
     <Layout>
       <div className="container py-6 md:py-10">
@@ -114,15 +150,11 @@ export default function ProductDetail() {
         </nav>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-          {/* Image */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="relative"
-          >
+          {/* Image Gallery */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative">
             <div className="aspect-square bg-muted rounded-2xl flex items-center justify-center overflow-hidden sticky top-24">
-              {product.image_url ? (
-                <img src={product.image_url} alt={product.name} className="object-cover w-full h-full" />
+              {allImages.length > 0 ? (
+                <img src={allImages[selectedImage] || allImages[0]} alt={product.name} className="object-cover w-full h-full" />
               ) : (
                 <div className="text-muted-foreground">No image available</div>
               )}
@@ -131,7 +163,30 @@ export default function ProductDetail() {
                   -{discount}% OFF
                 </Badge>
               )}
+              {/* Wishlist */}
+              <button
+                onClick={() => handleToggleWishlist(product.id)}
+                className="absolute top-4 right-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors shadow-md"
+              >
+                <Heart className={`h-5 w-5 transition-colors ${isInWishlist(product.id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+              </button>
             </div>
+            {/* Thumbnails */}
+            {allImages.length > 1 && (
+              <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+                {allImages.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(i)}
+                    className={`h-16 w-16 rounded-lg overflow-hidden shrink-0 border-2 transition-colors ${
+                      selectedImage === i ? "border-primary" : "border-transparent hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Details */}
@@ -163,6 +218,9 @@ export default function ProductDetail() {
               <span className="text-3xl md:text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
               {product.compare_at_price && (
                 <span className="text-lg text-muted-foreground line-through">{formatPrice(product.compare_at_price)}</span>
+              )}
+              {discount > 0 && (
+                <Badge variant="secondary" className="text-xs">Save {discount}%</Badge>
               )}
             </div>
 
@@ -209,6 +267,15 @@ export default function ProductDetail() {
                   {product.stock_quantity === 0 ? "Out of Stock" : "Buy Now"}
                 </Button>
               </div>
+
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => handleToggleWishlist(product.id)}
+              >
+                <Heart className={`h-4 w-4 mr-2 ${isInWishlist(product.id) ? "fill-destructive text-destructive" : ""}`} />
+                {isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+              </Button>
             </div>
 
             <Separator className="my-6" />
@@ -249,6 +316,21 @@ export default function ProductDetail() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Related Products */}
+        {relatedQuery.data && relatedQuery.data.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold mb-6">Related Products</h2>
+            <ProductGrid
+              products={(relatedQuery.data as any[]) ?? []}
+              isLoading={relatedQuery.isLoading}
+              onAddToCart={handleRelatedAddToCart}
+              onToggleWishlist={handleToggleWishlist}
+              isWishlisted={isInWishlist}
+              columns={4}
+            />
           </div>
         )}
       </div>

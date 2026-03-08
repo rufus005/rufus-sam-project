@@ -17,6 +17,8 @@ interface ProductGridProps {
   isLoading?: boolean;
   emptyMessage?: string;
   onAddToCart?: (productId: string) => void;
+  onToggleWishlist?: (productId: string) => void;
+  isWishlisted?: (productId: string) => boolean;
   columns?: number;
 }
 
@@ -25,6 +27,8 @@ export default function ProductGrid({
   isLoading,
   emptyMessage = "No products found.",
   onAddToCart,
+  onToggleWishlist,
+  isWishlisted,
   columns = 4,
 }: ProductGridProps) {
   if (isLoading) {
@@ -56,6 +60,8 @@ export default function ProductGrid({
           key={product.id}
           product={product}
           onAddToCart={onAddToCart}
+          onToggleWishlist={onToggleWishlist}
+          isWishlisted={isWishlisted?.(product.id)}
         />
       ))}
     </div>
