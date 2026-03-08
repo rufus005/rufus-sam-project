@@ -292,7 +292,7 @@ export default function Checkout() {
                 ))}
                 <div className="border-t pt-3 flex justify-between font-bold">
                   <span>Total</span>
-                  <span className="text-primary">${cartTotal.toFixed(2)}</span>
+                  <span className="text-primary">{formatPrice(cartTotal)}</span>
                 </div>
               </div>
 
