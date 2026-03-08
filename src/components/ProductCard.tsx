@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatPrice } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Heart, Eye } from "lucide-react";
 
 interface ProductCardProps {
   product: {
@@ -17,9 +17,11 @@ interface ProductCardProps {
     categories?: { name: string; slug: string } | null;
   };
   onAddToCart?: (productId: string) => void;
+  onToggleWishlist?: (productId: string) => void;
+  isWishlisted?: boolean;
 }
 
-export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+export default function ProductCard({ product, onAddToCart, onToggleWishlist, isWishlisted }: ProductCardProps) {
   const discount = product.compare_at_price
     ? Math.round((1 - product.price / product.compare_at_price) * 100)
     : 0;
@@ -49,7 +51,28 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             Sold Out
           </Badge>
         )}
+        {/* Hover overlay actions */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100">
+          <div className="flex gap-2">
+            <Button size="sm" variant="secondary" className="h-8 text-xs shadow-lg" asChild>
+              <Link to={`/products/${product.slug}`} onClick={(e) => e.stopPropagation()}>
+                <Eye className="h-3.5 w-3.5 mr-1" /> View
+              </Link>
+            </Button>
+          </div>
+        </div>
       </Link>
+
+      {/* Wishlist button */}
+      {onToggleWishlist && (
+        <button
+          onClick={(e) => { e.preventDefault(); onToggleWishlist(product.id); }}
+          className="absolute top-3 right-3 h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors shadow-sm z-10"
+        >
+          <Heart className={`h-4 w-4 transition-colors ${isWishlisted ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+        </button>
+      )}
+
       <CardContent className="p-4 space-y-2">
         {product.categories?.name && (
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">

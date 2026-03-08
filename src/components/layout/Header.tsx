@@ -14,6 +14,7 @@ import {
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
 import { supabase } from "@/integrations/supabase/client";
 
 const navLinks = [
@@ -28,6 +29,7 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -76,6 +78,7 @@ export default function Header() {
                   <div className="border-t my-2" />
                   <Link to="/profile" className="px-3 py-2.5 rounded-lg text-base font-medium hover:bg-secondary transition-colors">Profile</Link>
                   <Link to="/orders" className="px-3 py-2.5 rounded-lg text-base font-medium hover:bg-secondary transition-colors">Orders</Link>
+                  <Link to="/wishlist" className="px-3 py-2.5 rounded-lg text-base font-medium hover:bg-secondary transition-colors">Wishlist</Link>
                 </>
               )}
             </nav>
@@ -120,6 +123,19 @@ export default function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-1">
+          {/* Wishlist */}
+          <Button variant="ghost" size="icon" asChild className="relative hidden sm:flex">
+            <Link to="/wishlist">
+              <Heart className="h-5 w-5" />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+          </Button>
+
+          {/* Cart */}
           <Button variant="ghost" size="icon" asChild className="relative">
             <Link to="/cart">
               <ShoppingCart className="h-5 w-5" />
@@ -146,6 +162,9 @@ export default function Header() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/orders">Orders</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/wishlist">Wishlist</Link>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
