@@ -1,21 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { Mail, Lock, ShoppingBag, KeyRound } from "lucide-react";
+import { Mail, Lock, ShoppingBag, KeyRound, RefreshCw } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"password" | "otp">("password");
+  const [mode, setMode] = useState<"password" | "otp">("otp");
   const [otpSent, setOtpSent] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +38,7 @@ export default function Login() {
     setLoading(false);
   };
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const sendOtp = async () => {
     if (!email.trim()) { toast.error("Please enter your email"); return; }
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({ email });
@@ -39,13 +46,25 @@ export default function Login() {
       toast.error(error.message);
     } else {
       setOtpSent(true);
-      toast.success("OTP sent to your email!");
+      setResendCooldown(60);
+      toast.success("A 6-digit OTP has been sent to your email.");
     }
     setLoading(false);
   };
 
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendOtp();
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    await sendOtp();
+  };
+
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (otp.length !== 6) { toast.error("Please enter the full 6-digit OTP"); return; }
     setLoading(true);
     const { error } = await supabase.auth.verifyOtp({
       email,
@@ -53,7 +72,8 @@ export default function Login() {
       type: "email",
     });
     if (error) {
-      toast.error(error.message);
+      toast.error("Invalid or expired OTP. Please try again.");
+      setOtp("");
     } else {
       toast.success("Welcome back!");
       navigate("/");
@@ -77,21 +97,21 @@ export default function Login() {
           <div className="flex rounded-xl bg-secondary/50 p-1">
             <button
               type="button"
-              onClick={() => { setMode("password"); setOtpSent(false); }}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                mode === "password" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
-              }`}
-            >
-              <Lock className="h-3.5 w-3.5 inline mr-1.5" />Password
-            </button>
-            <button
-              type="button"
               onClick={() => setMode("otp")}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
                 mode === "otp" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
               }`}
             >
               <KeyRound className="h-3.5 w-3.5 inline mr-1.5" />Email OTP
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode("password"); setOtpSent(false); }}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                mode === "password" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
+              }`}
+            >
+              <Lock className="h-3.5 w-3.5 inline mr-1.5" />Password
             </button>
           </div>
         </div>
@@ -140,7 +160,7 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)} className="pl-9" required />
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">We'll send a one-time login code to your email.</p>
+              <p className="text-xs text-muted-foreground">We'll send a 6-digit verification code to your email. The code expires in 5 minutes.</p>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
               <Button type="submit" className="w-full h-11" disabled={loading}>
@@ -154,24 +174,48 @@ export default function Login() {
           </form>
         ) : (
           <form onSubmit={handleVerifyOtp}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               <div className="p-3 rounded-xl bg-accent/10 border border-accent/20 text-sm text-center">
                 OTP sent to <span className="font-medium">{email}</span>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="otp-code">Enter OTP Code</Label>
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="otp-code" placeholder="123456" value={otp} maxLength={6}
-                    onChange={(e) => setOtp(e.target.value)} className="pl-9 text-center tracking-widest text-lg" required />
+              <div className="space-y-3">
+                <Label className="text-center block">Enter 6-digit OTP</Label>
+                <div className="flex justify-center">
+                  <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
                 </div>
+                <p className="text-xs text-muted-foreground text-center">Code expires in 5 minutes</p>
               </div>
-              <button type="button" onClick={() => setOtpSent(false)} className="text-xs text-primary hover:underline w-full text-center">
-                Change email or resend OTP
-              </button>
+              <div className="flex items-center justify-center gap-4 text-xs">
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resendCooldown > 0 || loading}
+                  className="inline-flex items-center gap-1 text-primary hover:underline disabled:text-muted-foreground disabled:no-underline"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend OTP"}
+                </button>
+                <span className="text-muted-foreground">|</span>
+                <button
+                  type="button"
+                  onClick={() => { setOtpSent(false); setOtp(""); }}
+                  className="text-primary hover:underline"
+                >
+                  Change email
+                </button>
+              </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full h-11" disabled={loading}>
+              <Button type="submit" className="w-full h-11" disabled={loading || otp.length !== 6}>
                 {loading ? "Verifying..." : "Verify & Sign in"}
               </Button>
             </CardFooter>
