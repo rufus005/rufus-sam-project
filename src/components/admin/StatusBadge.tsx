@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { forwardRef } from "react";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "Pending", className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800" },
@@ -20,11 +21,20 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export default function StatusBadge({ status, className = "" }: StatusBadgeProps) {
-  const config = statusConfig[status.toLowerCase()] ?? { label: status, className: "bg-secondary text-secondary-foreground" };
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize border ${config.className} ${className}`}>
-      {config.label}
-    </span>
-  );
-}
+const StatusBadge = forwardRef<HTMLSpanElement, StatusBadgeProps>(
+  ({ status, className = "" }, ref) => {
+    const config = statusConfig[status.toLowerCase()] ?? { label: status, className: "bg-secondary text-secondary-foreground" };
+    return (
+      <span
+        ref={ref}
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize border ${config.className} ${className}`}
+      >
+        {config.label}
+      </span>
+    );
+  }
+);
+
+StatusBadge.displayName = "StatusBadge";
+
+export default StatusBadge;

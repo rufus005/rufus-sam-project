@@ -8,7 +8,7 @@ import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck } from "lucide-react";
+import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
 
 declare global {
@@ -28,7 +28,7 @@ const STEPS = [
 export default function Checkout() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { items, cartTotal, clearCart } = useCart();
+  const { items, cartTotal, clearCart, isLoading: cartLoading } = useCart();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">("razorpay");
@@ -53,6 +53,16 @@ export default function Checkout() {
     );
   }
 
+  if (cartLoading) {
+    return (
+      <Layout>
+        <div className="container py-16 text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
+        </div>
+      </Layout>
+    );
+  }
+
   if (items.length === 0) {
     return (
       <Layout>
@@ -69,14 +79,50 @@ export default function Checkout() {
 
   const handleAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.fullName || !form.phone || !form.streetAddress || !form.city || !form.postalCode) {
+    if (!form.fullName.trim() || !form.phone.trim() || !form.streetAddress.trim() || !form.city.trim() || !form.postalCode.trim()) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
+      return;
+    }
+    if (!/^\+?\d{10,15}$/.test(form.phone.replace(/\s/g, ""))) {
+      toast({ title: "Please enter a valid phone number", variant: "destructive" });
+      return;
+    }
+    if (!/^\d{4,10}$/.test(form.postalCode.replace(/\s/g, ""))) {
+      toast({ title: "Please enter a valid postal code", variant: "destructive" });
       return;
     }
     setStep(2);
   };
 
+  // Validate stock before placing order
+  const validateStock = async (): Promise<boolean> => {
+    for (const item of items) {
+      const { data: product } = await supabase
+        .from("products")
+        .select("stock_quantity, name")
+        .eq("id", item.product_id)
+        .maybeSingle();
+      if (!product) {
+        toast({ title: `Product "${item.product.name}" is no longer available`, variant: "destructive" });
+        return false;
+      }
+      if (product.stock_quantity < item.quantity) {
+        toast({
+          title: `Insufficient stock for "${product.name}"`,
+          description: `Only ${product.stock_quantity} available, but ${item.quantity} requested.`,
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
   const placeOrder = async (paymentId: string, paymentStatus: string) => {
+    // Validate stock first
+    const stockValid = await validateStock();
+    if (!stockValid) return;
+
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
@@ -128,6 +174,10 @@ export default function Checkout() {
   };
 
   const handleRazorpay = async () => {
+    if (typeof window.Razorpay === "undefined") {
+      toast({ title: "Payment gateway not loaded", description: "Please refresh the page and try again.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const amountInPaise = Math.round(cartTotal * 100);
@@ -142,7 +192,7 @@ export default function Checkout() {
             await placeOrder(response.razorpay_payment_id, "paid");
             toast({ title: "Payment successful! Order placed." });
           } catch (err: any) {
-            toast({ title: "Order failed", description: err.message, variant: "destructive" });
+            toast({ title: "Order failed after payment", description: err.message, variant: "destructive" });
           }
         },
         prefill: { name: form.fullName, email: user.email ?? "", contact: form.phone },
@@ -170,6 +220,9 @@ export default function Checkout() {
     if (paymentMethod === "cod") handleCOD();
     else handleRazorpay();
   };
+
+  // Check for out-of-stock items
+  const outOfStockItems = items.filter((item) => item.product.stock_quantity <= 0);
 
   return (
     <Layout>
@@ -199,6 +252,19 @@ export default function Checkout() {
           ))}
         </div>
 
+        {/* Out of stock warning */}
+        {outOfStockItems.length > 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-sm text-destructive">Some items are out of stock</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Please remove {outOfStockItems.map((i) => i.product.name).join(", ")} from your cart before proceeding.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Step 1: Cart Summary */}
         {step === 0 && (
           <div>
@@ -216,6 +282,9 @@ export default function Checkout() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{item.product.name}</p>
                     <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                    {item.product.stock_quantity <= 0 && (
+                      <p className="text-xs text-destructive font-medium">Out of stock</p>
+                    )}
                   </div>
                   <p className="font-bold text-sm">{formatPrice(item.product.price * item.quantity)}</p>
                 </div>
@@ -225,7 +294,12 @@ export default function Checkout() {
               <span className="text-lg font-bold">Total</span>
               <span className="text-xl font-bold text-primary">{formatPrice(cartTotal)}</span>
             </div>
-            <Button className="w-full mt-6 h-12" size="lg" onClick={() => setStep(1)}>
+            <Button
+              className="w-full mt-6 h-12"
+              size="lg"
+              onClick={() => setStep(1)}
+              disabled={outOfStockItems.length > 0}
+            >
               Continue to Address
             </Button>
           </div>

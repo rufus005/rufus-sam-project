@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useNavigate, Link } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
 import ProductGrid from "@/components/ProductGrid";
@@ -15,6 +16,7 @@ export default function Products() {
   const [searchParams] = useSearchParams();
   const initialSearch = searchParams.get("search") ?? "";
   const initialCategory = searchParams.get("category") ?? "all";
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
@@ -49,12 +51,12 @@ export default function Products() {
   });
 
   const handleAddToCart = (productId: string) => {
-    if (!user) { window.location.href = "/login"; return; }
+    if (!user) { navigate("/login"); return; }
     addToCart.mutate({ productId });
   };
 
   const handleToggleWishlist = (productId: string) => {
-    if (!user) { window.location.href = "/login"; return; }
+    if (!user) { navigate("/login"); return; }
     toggleWishlist.mutate(productId);
   };
 
@@ -111,14 +113,25 @@ export default function Products() {
           </Select>
         </div>
 
+        {/* Error state */}
+        {productsQuery.isError && (
+          <div className="text-center py-12">
+            <p className="text-destructive font-medium mb-2">Failed to load products</p>
+            <p className="text-sm text-muted-foreground mb-4">Please try again later.</p>
+            <button onClick={() => productsQuery.refetch()} className="text-primary hover:underline text-sm">Retry</button>
+          </div>
+        )}
+
         {/* Grid */}
-        <ProductGrid
-          products={(productsQuery.data as any[]) ?? []}
-          isLoading={productsQuery.isLoading}
-          onAddToCart={handleAddToCart}
-          onToggleWishlist={handleToggleWishlist}
-          isWishlisted={isInWishlist}
-        />
+        {!productsQuery.isError && (
+          <ProductGrid
+            products={(productsQuery.data as any[]) ?? []}
+            isLoading={productsQuery.isLoading}
+            onAddToCart={handleAddToCart}
+            onToggleWishlist={handleToggleWishlist}
+            isWishlisted={isInWishlist}
+          />
+        )}
       </div>
     </Layout>
   );

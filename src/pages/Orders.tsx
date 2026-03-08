@@ -5,8 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Package, ShoppingBag, Calendar, ChevronRight } from "lucide-react";
+import { Package, ShoppingBag, Calendar, ChevronRight, AlertTriangle } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
@@ -14,6 +13,7 @@ const statusColors: Record<string, string> = {
   shipped: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
   delivered: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  payment_received: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
 };
 
 export default function Orders() {
@@ -67,6 +67,13 @@ export default function Orders() {
               <div key={i} className="h-32 rounded-2xl bg-muted animate-pulse" />
             ))}
           </div>
+        ) : ordersQuery.isError ? (
+          <div className="text-center py-12">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <p className="text-destructive font-medium mb-2">Failed to load orders</p>
+            <p className="text-sm text-muted-foreground mb-4">Please try again later.</p>
+            <button onClick={() => ordersQuery.refetch()} className="text-primary hover:underline text-sm">Retry</button>
+          </div>
         ) : ordersQuery.data?.length === 0 ? (
           <div className="text-center py-20 max-w-md mx-auto">
             <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
@@ -97,7 +104,7 @@ export default function Orders() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${statusColors[order.status] ?? "bg-secondary text-secondary-foreground"}`}>
-                        {order.status}
+                        {order.status.replace("_", " ")}
                       </span>
                       <span className="font-bold text-lg">{formatPrice(order.total)}</span>
                     </div>
