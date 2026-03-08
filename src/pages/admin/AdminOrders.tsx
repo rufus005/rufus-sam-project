@@ -8,14 +8,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/currency";
-import { Search, Eye, CheckCircle, XCircle, Truck } from "lucide-react";
+import { downloadInvoice, shareInvoiceViaWhatsApp, shareInvoiceViaEmail, copyInvoiceDetails } from "@/lib/invoice";
+import {
+  Search, Eye, CheckCircle, XCircle, FileText, Download, Share2, Mail, MessageCircle, Copy, MoreHorizontal,
+} from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const statuses = ["pending", "payment_received", "processing", "shipped", "delivered", "cancelled"];
-
-// Statuses that count as "confirmed" — stock is deducted when entering these
 const CONFIRMED_STATUSES = ["payment_received", "processing", "shipped", "delivered"];
 
 export default function AdminOrders() {
@@ -36,7 +40,6 @@ export default function AdminOrders() {
     },
   });
 
-  // Helper: reduce stock for order items
   const adjustStock = async (orderItems: any[], direction: "deduct" | "restore") => {
     for (const item of orderItems) {
       const { data: product } = await supabase
@@ -57,25 +60,13 @@ export default function AdminOrders() {
     mutationFn: async ({ id, status, prevStatus, orderItems }: { id: string; status: string; prevStatus: string; orderItems: any[] }) => {
       const wasConfirmed = CONFIRMED_STATUSES.includes(prevStatus);
       const isNowConfirmed = CONFIRMED_STATUSES.includes(status);
-
-      // Update payment_status when confirming payment
       const updates: any = { status };
-      if (status === "payment_received") {
-        updates.payment_status = "paid";
-      }
-      if (status === "cancelled") {
-        updates.payment_status = "unpaid";
-      }
-
+      if (status === "payment_received") updates.payment_status = "paid";
+      if (status === "cancelled") updates.payment_status = "unpaid";
       const { error } = await supabase.from("orders").update(updates).eq("id", id);
       if (error) throw error;
-
-      // Stock management
-      if (!wasConfirmed && isNowConfirmed) {
-        await adjustStock(orderItems, "deduct");
-      } else if (wasConfirmed && !isNowConfirmed) {
-        await adjustStock(orderItems, "restore");
-      }
+      if (!wasConfirmed && isNowConfirmed) await adjustStock(orderItems, "deduct");
+      else if (wasConfirmed && !isNowConfirmed) await adjustStock(orderItems, "restore");
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
@@ -85,21 +76,11 @@ export default function AdminOrders() {
   });
 
   const confirmPayment = (order: any) => {
-    updateStatus.mutate({
-      id: order.id,
-      status: "payment_received",
-      prevStatus: order.status,
-      orderItems: order.order_items ?? [],
-    });
+    updateStatus.mutate({ id: order.id, status: "payment_received", prevStatus: order.status, orderItems: order.order_items ?? [] });
   };
 
   const cancelOrder = (order: any) => {
-    updateStatus.mutate({
-      id: order.id,
-      status: "cancelled",
-      prevStatus: order.status,
-      orderItems: order.order_items ?? [],
-    });
+    updateStatus.mutate({ id: order.id, status: "cancelled", prevStatus: order.status, orderItems: order.order_items ?? [] });
   };
 
   const getCustomerInfo = (order: any) => {
@@ -108,6 +89,12 @@ export default function AdminOrders() {
       return { name: addr.full_name || "—", phone: addr.phone || "", address: `${addr.street_address || ""}, ${addr.city || ""} ${addr.postal_code || ""}` };
     }
     return { name: "—", phone: "", address: "" };
+  };
+
+  const handleCopyInvoice = async (order: any) => {
+    const text = copyInvoiceDetails(order);
+    await navigator.clipboard.writeText(text);
+    toast({ title: "Invoice details copied to clipboard" });
   };
 
   const filteredOrders = ordersQuery.data?.filter((order) => {
@@ -125,7 +112,6 @@ export default function AdminOrders() {
           <p className="text-muted-foreground mt-1">{ordersQuery.data?.length ?? 0} total orders</p>
         </div>
 
-        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -185,15 +171,11 @@ export default function AdminOrders() {
                         </span>
                       </TableCell>
                       <TableCell className="font-bold">{formatPrice(order.total)}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={order.payment_status} />
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={order.status} />
-                      </TableCell>
+                      <TableCell><StatusBadge status={order.payment_status} /></TableCell>
+                      <TableCell><StatusBadge status={order.status} /></TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          {/* View */}
+                          {/* View Details */}
                           <button
                             onClick={() => setSelectedOrder(order)}
                             className="h-8 w-8 rounded-lg bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors"
@@ -202,32 +184,47 @@ export default function AdminOrders() {
                             <Eye className="h-4 w-4 text-muted-foreground" />
                           </button>
 
-                          {/* Confirm Payment (only for pending) */}
+                          {/* Download Invoice */}
+                          <button
+                            onClick={() => downloadInvoice(order as any)}
+                            className="h-8 w-8 rounded-lg bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors"
+                            title="Download Invoice"
+                          >
+                            <Download className="h-4 w-4 text-muted-foreground" />
+                          </button>
+
+                          {/* Share Invoice Dropdown */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="h-8 w-8 rounded-lg bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors"
+                                title="Share Invoice"
+                              >
+                                <Share2 className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem onClick={() => handleCopyInvoice(order)} className="gap-2">
+                                <Copy className="h-4 w-4" /> Copy Invoice Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => shareInvoiceViaEmail(order as any)} className="gap-2">
+                                <Mail className="h-4 w-4" /> Share via Email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => shareInvoiceViaWhatsApp(order as any)} className="gap-2">
+                                <MessageCircle className="h-4 w-4" /> Share via WhatsApp
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          {/* Status Actions */}
                           {isPending && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 text-xs gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                              onClick={() => confirmPayment(order)}
-                              disabled={updateStatus.isPending}
-                            >
+                            <Button size="sm" variant="outline" className="h-8 text-xs gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" onClick={() => confirmPayment(order)} disabled={updateStatus.isPending}>
                               <CheckCircle className="h-3.5 w-3.5" /> Confirm
                             </Button>
                           )}
 
-                          {/* Update Status (for confirmed orders that aren't cancelled/delivered) */}
                           {canChangeStatus && !isPending && (
-                            <Select
-                              value={order.status}
-                              onValueChange={(v) =>
-                                updateStatus.mutate({
-                                  id: order.id,
-                                  status: v,
-                                  prevStatus: order.status,
-                                  orderItems: (order as any).order_items ?? [],
-                                })
-                              }
-                            >
+                            <Select value={order.status} onValueChange={(v) => updateStatus.mutate({ id: order.id, status: v, prevStatus: order.status, orderItems: (order as any).order_items ?? [] })}>
                               <SelectTrigger className="w-36 h-8 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
@@ -239,15 +236,8 @@ export default function AdminOrders() {
                             </Select>
                           )}
 
-                          {/* Cancel (not for already cancelled/delivered) */}
                           {canChangeStatus && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
-                              onClick={() => cancelOrder(order)}
-                              disabled={updateStatus.isPending}
-                            >
+                            <Button size="sm" variant="outline" className="h-8 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => cancelOrder(order)} disabled={updateStatus.isPending}>
                               <XCircle className="h-3.5 w-3.5" /> Cancel
                             </Button>
                           )}
@@ -312,24 +302,34 @@ export default function AdminOrders() {
                   <span className="text-primary">{formatPrice(selectedOrder.total)}</span>
                 </div>
 
-                {/* Quick Actions in Dialog */}
+                {/* Invoice Actions in Dialog */}
+                <Separator />
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => downloadInvoice(selectedOrder as any)}>
+                    <Download className="h-4 w-4" /> Download Invoice
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => handleCopyInvoice(selectedOrder)}>
+                    <Copy className="h-4 w-4" /> Copy
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => shareInvoiceViaEmail(selectedOrder as any)}>
+                    <Mail className="h-4 w-4" /> Email
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => shareInvoiceViaWhatsApp(selectedOrder as any)}>
+                    <MessageCircle className="h-4 w-4" /> WhatsApp
+                  </Button>
+                </div>
+
+                {/* Quick Actions */}
                 {selectedOrder.status !== "cancelled" && selectedOrder.status !== "delivered" && (
                   <>
                     <Separator />
                     <div className="flex gap-2">
                       {selectedOrder.status === "pending" && (
-                        <Button
-                          className="flex-1 gap-1"
-                          onClick={() => { confirmPayment(selectedOrder); setSelectedOrder(null); }}
-                        >
+                        <Button className="flex-1 gap-1" onClick={() => { confirmPayment(selectedOrder); setSelectedOrder(null); }}>
                           <CheckCircle className="h-4 w-4" /> Confirm Payment
                         </Button>
                       )}
-                      <Button
-                        variant="destructive"
-                        className="gap-1"
-                        onClick={() => { cancelOrder(selectedOrder); setSelectedOrder(null); }}
-                      >
+                      <Button variant="destructive" className="gap-1" onClick={() => { cancelOrder(selectedOrder); setSelectedOrder(null); }}>
                         <XCircle className="h-4 w-4" /> Cancel Order
                       </Button>
                     </div>
