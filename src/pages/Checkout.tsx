@@ -169,52 +169,32 @@ export default function Checkout() {
     setLoading(false);
   };
 
-  const handleRazorpay = async () => {
-    if (typeof window.Razorpay === "undefined") {
-      toast({ title: "Payment gateway not loaded", description: "Please refresh the page and try again.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    try {
-      const amountInPaise = Math.round(cartTotal * 100);
-      const options = {
-        key: RAZORPAY_KEY,
-        amount: amountInPaise,
-        currency: "INR",
-        name: "Rufus Sam Store",
-        description: `Order of ${items.length} item(s)`,
-        handler: async (response: any) => {
-          try {
-            await placeOrder(response.razorpay_payment_id, "paid");
-            toast({ title: "Payment successful! Order placed." });
-          } catch (err: any) {
-            toast({ title: "Order failed after payment", description: err.message, variant: "destructive" });
-          }
-        },
-        prefill: { name: form.fullName, email: user.email ?? "", contact: form.phone },
-        theme: { color: "hsl(217, 91%, 60%)" },
-        modal: { ondismiss: () => setLoading(false) },
-      };
-      const rzp = new window.Razorpay(options);
-      rzp.on("payment.failed", async (response: any) => {
+  const handleOnlinePayment = () => {
+    setShowPaymentSim(true);
+    setPaymentSimStep("processing");
+    // Simulate payment processing (2 seconds)
+    setTimeout(() => {
+      setPaymentSimStep("success");
+      // After showing success, place the order
+      setTimeout(async () => {
+        setLoading(true);
         try {
-          await placeOrder(response.error.metadata?.payment_id ?? "failed", "failed");
-          toast({ title: "Payment failed, order saved.", variant: "destructive" });
+          const fakePaymentId = "sim_pay_" + Date.now();
+          await placeOrder(fakePaymentId, "paid");
+          toast({ title: "Payment successful! Order placed." });
         } catch (err: any) {
           toast({ title: "Order failed", description: err.message, variant: "destructive" });
         }
+        setShowPaymentSim(false);
+        setPaymentSimStep("idle");
         setLoading(false);
-      });
-      rzp.open();
-    } catch (err: any) {
-      toast({ title: "Payment error", description: err.message, variant: "destructive" });
-      setLoading(false);
-    }
+      }, 1500);
+    }, 2000);
   };
 
   const handlePayment = () => {
     if (paymentMethod === "cod") handleCOD();
-    else handleRazorpay();
+    else handleOnlinePayment();
   };
 
   // Check for out-of-stock items
