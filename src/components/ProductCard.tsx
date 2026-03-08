@@ -27,7 +27,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
     : 0;
 
   return (
-    <Card className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 bg-card">
+    <Card className="group overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 bg-card relative">
       <Link to={`/products/${product.slug}`} className="block relative overflow-hidden">
         <div className="aspect-[4/5] bg-muted flex items-center justify-center overflow-hidden">
           {product.image_url ? (
@@ -42,12 +42,12 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
           )}
         </div>
         {discount > 0 && (
-          <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs font-bold">
+          <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs font-bold z-10">
             -{discount}%
           </Badge>
         )}
         {product.stock_quantity === 0 && (
-          <Badge variant="secondary" className="absolute top-3 right-3">
+          <Badge variant="secondary" className="absolute top-3 left-3 z-10">
             Sold Out
           </Badge>
         )}
@@ -63,11 +63,11 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
         </div>
       </Link>
 
-      {/* Wishlist button */}
+      {/* Wishlist button — always top-right */}
       {onToggleWishlist && (
         <button
-          onClick={(e) => { e.preventDefault(); onToggleWishlist(product.id); }}
-          className="absolute top-3 right-3 h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors shadow-sm z-10"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleWishlist(product.id); }}
+          className="absolute top-3 right-3 h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors shadow-sm z-20"
         >
           <Heart className={`h-4 w-4 transition-colors ${isWishlisted ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
         </button>
@@ -100,6 +100,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
               className="h-9 w-9 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
               onClick={(e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 onAddToCart(product.id);
               }}
             >

@@ -22,6 +22,13 @@ interface ProductGridProps {
   columns?: number;
 }
 
+const gridColsClass: Record<number, string> = {
+  2: "lg:grid-cols-2",
+  3: "lg:grid-cols-3",
+  4: "lg:grid-cols-4",
+  5: "lg:grid-cols-5",
+};
+
 export default function ProductGrid({
   products,
   isLoading,
@@ -31,9 +38,11 @@ export default function ProductGrid({
   isWishlisted,
   columns = 4,
 }: ProductGridProps) {
+  const lgClass = gridColsClass[columns] ?? "lg:grid-cols-4";
+
   if (isLoading) {
     return (
-      <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-${columns} gap-4 md:gap-6`}>
+      <div className={`grid grid-cols-2 md:grid-cols-3 ${lgClass} gap-4 md:gap-6`}>
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="space-y-3">
             <Skeleton className="aspect-[4/5] rounded-lg" />
@@ -54,7 +63,7 @@ export default function ProductGrid({
   }
 
   return (
-    <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-${columns} gap-4 md:gap-6`}>
+    <div className={`grid grid-cols-2 md:grid-cols-3 ${lgClass} gap-4 md:gap-6`}>
       {products.map((product) => (
         <ProductCard
           key={product.id}
