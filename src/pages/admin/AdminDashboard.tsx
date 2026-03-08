@@ -6,7 +6,10 @@ import DashboardCard from "@/components/admin/DashboardCard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPrice } from "@/lib/currency";
-import { Package, ShoppingCart, Users, DollarSign, TrendingUp, Mail } from "lucide-react";
+import { Package, ShoppingCart, Users, DollarSign, Clock, CheckCircle, Mail } from "lucide-react";
+
+// Revenue only counts orders with these statuses
+const REVENUE_STATUSES = ["payment_received", "processing", "shipped", "delivered"];
 
 export default function AdminDashboard() {
   const stats = useQuery({
@@ -14,14 +17,21 @@ export default function AdminDashboard() {
     queryFn: async () => {
       const [products, orders, profiles, subscribers] = await Promise.all([
         supabase.from("products").select("id", { count: "exact", head: true }),
-        supabase.from("orders").select("id, total"),
+        supabase.from("orders").select("id, total, status"),
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("newsletter_subscribers").select("id", { count: "exact", head: true }),
       ]);
-      const totalRevenue = orders.data?.reduce((s, o) => s + Number(o.total), 0) ?? 0;
+
+      const allOrders = orders.data ?? [];
+      const confirmedOrders = allOrders.filter((o) => REVENUE_STATUSES.includes(o.status));
+      const pendingOrders = allOrders.filter((o) => o.status === "pending");
+      const totalRevenue = confirmedOrders.reduce((s, o) => s + Number(o.total), 0);
+
       return {
         products: products.count ?? 0,
-        orders: orders.data?.length ?? 0,
+        totalOrders: allOrders.length,
+        pendingOrders: pendingOrders.length,
+        confirmedOrders: confirmedOrders.length,
         users: profiles.count ?? 0,
         subscribers: subscribers.count ?? 0,
         revenue: totalRevenue,
@@ -45,8 +55,10 @@ export default function AdminDashboard() {
   const s = stats.data;
 
   const cards = [
-    { label: "Total Revenue", value: s ? formatPrice(s.revenue) : "—", icon: DollarSign, color: "text-accent bg-accent/10" },
-    { label: "Total Orders", value: s?.orders ?? "—", icon: ShoppingCart, color: "text-primary bg-primary/10" },
+    { label: "Total Revenue", value: s ? formatPrice(s.revenue) : "—", icon: DollarSign, color: "text-accent bg-accent/10", subtitle: "Confirmed only" },
+    { label: "Total Orders", value: s?.totalOrders ?? "—", icon: ShoppingCart, color: "text-primary bg-primary/10" },
+    { label: "Pending Orders", value: s?.pendingOrders ?? "—", icon: Clock, color: "text-yellow-500 bg-yellow-500/10" },
+    { label: "Confirmed Orders", value: s?.confirmedOrders ?? "—", icon: CheckCircle, color: "text-emerald-500 bg-emerald-500/10" },
     { label: "Total Products", value: s?.products ?? "—", icon: Package, color: "text-orange-500 bg-orange-500/10" },
     { label: "Total Users", value: s?.users ?? "—", icon: Users, color: "text-purple-500 bg-purple-500/10" },
     { label: "Subscribers", value: s?.subscribers ?? "—", icon: Mail, color: "text-pink-500 bg-pink-500/10" },
@@ -61,7 +73,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {cards.map((card) => (
             <DashboardCard key={card.label} {...card} />
           ))}

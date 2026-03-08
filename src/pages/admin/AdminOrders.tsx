@@ -5,15 +5,18 @@ import StatusBadge from "@/components/admin/StatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/currency";
-import { ShoppingCart, Search, Eye } from "lucide-react";
+import { Search, Eye, CheckCircle, XCircle, Truck } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-const statuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
+const statuses = ["pending", "payment_received", "processing", "shipped", "delivered", "cancelled"];
+
+// Statuses that count as "confirmed" — stock is deducted when entering these
+const CONFIRMED_STATUSES = ["payment_received", "processing", "shipped", "delivered"];
 
 export default function AdminOrders() {
   const qc = useQueryClient();
@@ -33,16 +36,71 @@ export default function AdminOrders() {
     },
   });
 
+  // Helper: reduce stock for order items
+  const adjustStock = async (orderItems: any[], direction: "deduct" | "restore") => {
+    for (const item of orderItems) {
+      const { data: product } = await supabase
+        .from("products")
+        .select("stock_quantity")
+        .eq("id", item.product_id)
+        .single();
+      if (product) {
+        const newQty = direction === "deduct"
+          ? Math.max(0, product.stock_quantity - item.quantity)
+          : product.stock_quantity + item.quantity;
+        await supabase.from("products").update({ stock_quantity: newQty }).eq("id", item.product_id);
+      }
+    }
+  };
+
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("orders").update({ status }).eq("id", id);
+    mutationFn: async ({ id, status, prevStatus, orderItems }: { id: string; status: string; prevStatus: string; orderItems: any[] }) => {
+      const wasConfirmed = CONFIRMED_STATUSES.includes(prevStatus);
+      const isNowConfirmed = CONFIRMED_STATUSES.includes(status);
+
+      // Update payment_status when confirming payment
+      const updates: any = { status };
+      if (status === "payment_received") {
+        updates.payment_status = "paid";
+      }
+      if (status === "cancelled") {
+        updates.payment_status = "unpaid";
+      }
+
+      const { error } = await supabase.from("orders").update(updates).eq("id", id);
       if (error) throw error;
+
+      // Stock management
+      if (!wasConfirmed && isNowConfirmed) {
+        await adjustStock(orderItems, "deduct");
+      } else if (wasConfirmed && !isNowConfirmed) {
+        await adjustStock(orderItems, "restore");
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
-      toast({ title: "Order status updated" });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+      toast({ title: "Order updated successfully" });
     },
   });
+
+  const confirmPayment = (order: any) => {
+    updateStatus.mutate({
+      id: order.id,
+      status: "payment_received",
+      prevStatus: order.status,
+      orderItems: order.order_items ?? [],
+    });
+  };
+
+  const cancelOrder = (order: any) => {
+    updateStatus.mutate({
+      id: order.id,
+      status: "cancelled",
+      prevStatus: order.status,
+      orderItems: order.order_items ?? [],
+    });
+  };
 
   const getCustomerInfo = (order: any) => {
     const addr = order.shipping_address;
@@ -74,13 +132,13 @@ export default function AdminOrders() {
             <Input placeholder="Search by customer or order ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-48">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               {statuses.map((s) => (
-                <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                <SelectItem key={s} value={s} className="capitalize">{s.replace("_", " ")}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -104,6 +162,11 @@ export default function AdminOrders() {
               <TableBody>
                 {filteredOrders?.map((order) => {
                   const customer = getCustomerInfo(order);
+                  const isPending = order.status === "pending";
+                  const isCancelled = order.status === "cancelled";
+                  const isDelivered = order.status === "delivered";
+                  const canChangeStatus = !isCancelled && !isDelivered;
+
                   return (
                     <TableRow key={order.id} className="hover:bg-secondary/20">
                       <TableCell>
@@ -126,24 +189,69 @@ export default function AdminOrders() {
                         <StatusBadge status={order.payment_status} />
                       </TableCell>
                       <TableCell>
-                        <Select value={order.status} onValueChange={(v) => updateStatus.mutate({ id: order.id, status: v })}>
-                          <SelectTrigger className="w-32 h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statuses.map((s) => (
-                              <SelectItem key={s} value={s} className="capitalize text-xs">{s}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <StatusBadge status={order.status} />
                       </TableCell>
                       <TableCell>
-                        <button
-                          onClick={() => setSelectedOrder(order)}
-                          className="h-8 w-8 rounded-lg bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors"
-                        >
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          {/* View */}
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="h-8 w-8 rounded-lg bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors"
+                            title="View details"
+                          >
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          </button>
+
+                          {/* Confirm Payment (only for pending) */}
+                          {isPending && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                              onClick={() => confirmPayment(order)}
+                              disabled={updateStatus.isPending}
+                            >
+                              <CheckCircle className="h-3.5 w-3.5" /> Confirm
+                            </Button>
+                          )}
+
+                          {/* Update Status (for confirmed orders that aren't cancelled/delivered) */}
+                          {canChangeStatus && !isPending && (
+                            <Select
+                              value={order.status}
+                              onValueChange={(v) =>
+                                updateStatus.mutate({
+                                  id: order.id,
+                                  status: v,
+                                  prevStatus: order.status,
+                                  orderItems: (order as any).order_items ?? [],
+                                })
+                              }
+                            >
+                              <SelectTrigger className="w-36 h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {statuses.filter((s) => s !== "pending").map((s) => (
+                                  <SelectItem key={s} value={s} className="capitalize text-xs">{s.replace("_", " ")}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+
+                          {/* Cancel (not for already cancelled/delivered) */}
+                          {canChangeStatus && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+                              onClick={() => cancelOrder(order)}
+                              disabled={updateStatus.isPending}
+                            >
+                              <XCircle className="h-3.5 w-3.5" /> Cancel
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -203,6 +311,30 @@ export default function AdminOrders() {
                   <span>Total</span>
                   <span className="text-primary">{formatPrice(selectedOrder.total)}</span>
                 </div>
+
+                {/* Quick Actions in Dialog */}
+                {selectedOrder.status !== "cancelled" && selectedOrder.status !== "delivered" && (
+                  <>
+                    <Separator />
+                    <div className="flex gap-2">
+                      {selectedOrder.status === "pending" && (
+                        <Button
+                          className="flex-1 gap-1"
+                          onClick={() => { confirmPayment(selectedOrder); setSelectedOrder(null); }}
+                        >
+                          <CheckCircle className="h-4 w-4" /> Confirm Payment
+                        </Button>
+                      )}
+                      <Button
+                        variant="destructive"
+                        className="gap-1"
+                        onClick={() => { cancelOrder(selectedOrder); setSelectedOrder(null); }}
+                      >
+                        <XCircle className="h-4 w-4" /> Cancel Order
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             );
           })()}

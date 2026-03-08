@@ -9,9 +9,10 @@ interface DashboardCardProps {
   color: string;
   href?: string;
   trend?: string;
+  subtitle?: string;
 }
 
-export default function DashboardCard({ label, value, icon: Icon, color, trend }: DashboardCardProps) {
+export default function DashboardCard({ label, value, icon: Icon, color, trend, subtitle }: DashboardCardProps) {
   return (
     <Card className="border-0 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden">
       <CardContent className="p-6">
@@ -28,6 +29,7 @@ export default function DashboardCard({ label, value, icon: Icon, color, trend }
         </div>
         <p className="text-2xl font-bold tracking-tight">{value}</p>
         <p className="text-sm text-muted-foreground mt-1">{label}</p>
+        {subtitle && <p className="text-xs text-muted-foreground/70 mt-0.5">{subtitle}</p>}
       </CardContent>
     </Card>
   );
