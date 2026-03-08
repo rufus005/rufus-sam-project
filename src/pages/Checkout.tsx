@@ -79,12 +79,20 @@ export default function Checkout() {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
     }
+    if (form.fullName.trim().length > 100) {
+      toast({ title: "Name must be less than 100 characters", variant: "destructive" });
+      return;
+    }
     if (!/^\+?\d{10,15}$/.test(form.phone.replace(/\s/g, ""))) {
-      toast({ title: "Please enter a valid phone number", variant: "destructive" });
+      toast({ title: "Please enter a valid phone number (10-15 digits)", variant: "destructive" });
       return;
     }
     if (!/^\d{4,10}$/.test(form.postalCode.replace(/\s/g, ""))) {
-      toast({ title: "Please enter a valid postal code", variant: "destructive" });
+      toast({ title: "Please enter a valid postal code (4-10 digits)", variant: "destructive" });
+      return;
+    }
+    if (form.streetAddress.trim().length > 500) {
+      toast({ title: "Address is too long", variant: "destructive" });
       return;
     }
     setStep(2);

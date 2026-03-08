@@ -109,11 +109,27 @@ export default function ProductDetail() {
     );
   }
 
+  if (productQuery.isError) {
+    return (
+      <Layout>
+        <div className="container py-16 text-center">
+          <h1 className="text-2xl font-bold mb-2 text-destructive">Failed to load product</h1>
+          <p className="text-muted-foreground mb-4">There was a network error. Please try again.</p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={() => productQuery.refetch()}>Retry</Button>
+            <Button asChild><Link to="/products">Back to Products</Link></Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!product) {
     return (
       <Layout>
         <div className="container py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Product not found</h1>
+          <p className="text-muted-foreground mb-4">This product may have been removed or the link is incorrect.</p>
           <Button asChild><Link to="/products">Back to Products</Link></Button>
         </div>
       </Layout>

@@ -33,7 +33,11 @@ export default function Cart() {
         <p className="text-muted-foreground mb-8">{items.length} item{items.length !== 1 ? "s" : ""} in your cart</p>
 
         {isLoading ? (
-          <div className="text-muted-foreground">Loading...</div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />
+            ))}
+          </div>
         ) : items.length === 0 ? (
           <div className="text-center py-20 max-w-md mx-auto">
             <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
