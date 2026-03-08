@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck } from "lucide-react";
+import { formatPrice } from "@/lib/currency";
 
 declare global {
   interface Window {
