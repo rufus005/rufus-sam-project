@@ -217,7 +217,7 @@ export default function Checkout() {
                     <p className="font-medium text-sm truncate">{item.product.name}</p>
                     <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                   </div>
-                  <p className="font-bold text-sm">${(item.product.price * item.quantity).toFixed(2)}</p>
+                  <p className="font-bold text-sm">{formatPrice(item.product.price * item.quantity)}</p>
                 </div>
               ))}
             </div>
