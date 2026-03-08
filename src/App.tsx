@@ -26,6 +26,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSubscribers from "./pages/admin/AdminSubscribers";
+import AdminLogin from "./pages/admin/AdminLogin";
 import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 
