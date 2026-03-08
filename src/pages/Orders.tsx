@@ -59,7 +59,7 @@ export default function Orders() {
                     <Badge variant={order.status === "delivered" ? "default" : "secondary"} className="capitalize">
                       {order.status}
                     </Badge>
-                    <span className="font-bold">${Number(order.total).toFixed(2)}</span>
+                    <span className="font-bold">{formatPrice(order.total)}</span>
                   </div>
                 </div>
                 <div className="text-sm text-muted-foreground">

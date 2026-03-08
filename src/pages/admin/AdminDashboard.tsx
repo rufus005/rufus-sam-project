@@ -98,7 +98,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-sm">${Number(order.total).toFixed(2)}</p>
+                      <p className="font-bold text-sm">{formatPrice(order.total)}</p>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
                         order.payment_status === "paid"
                           ? "bg-accent/10 text-accent"

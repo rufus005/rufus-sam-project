@@ -369,7 +369,7 @@ export default function Checkout() {
                     ? "Processing..."
                     : paymentMethod === "cod"
                     ? "Place Order (COD)"
-                    : `Pay $${cartTotal.toFixed(2)}`}
+                    : `Pay ${formatPrice(cartTotal)}`}
                 </Button>
               </div>
 

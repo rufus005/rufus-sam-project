@@ -46,7 +46,7 @@ export default function OrderConfirmation() {
                 {order.order_items.map((item: any) => (
                   <div key={item.id} className="flex justify-between text-sm py-1">
                     <span>{item.product_name} × {item.quantity}</span>
-                    <span>${(Number(item.price) * item.quantity).toFixed(2)}</span>
+                    <span>{formatPrice(Number(item.price) * item.quantity)}</span>
                   </div>
                 ))}
               </div>

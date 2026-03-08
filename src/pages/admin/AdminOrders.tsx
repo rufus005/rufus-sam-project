@@ -112,7 +112,7 @@ export default function AdminOrders() {
                           {(order as any).order_items?.length ?? 0}
                         </span>
                       </TableCell>
-                      <TableCell className="font-bold">${Number(order.total).toFixed(2)}</TableCell>
+                      <TableCell className="font-bold">{formatPrice(order.total)}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${paymentBadgeClass(order.payment_status)}`}>
                           {order.payment_status}
