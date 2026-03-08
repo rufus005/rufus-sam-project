@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, User, Search, Menu, ShoppingBag, LogOut, Heart } from "lucide-react";
+import { ShoppingCart, User, Search, Menu, ShoppingBag, LogOut, Heart, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,7 @@ export default function Header() {
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
@@ -123,6 +125,17 @@ export default function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-1">
+          {/* Dark mode toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            aria-label="Toggle dark mode"
+          >
+            <Sun className="h-5 w-5 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
+          </Button>
+
           {/* Wishlist */}
           <Button variant="ghost" size="icon" asChild className="relative hidden sm:flex">
             <Link to="/wishlist">
