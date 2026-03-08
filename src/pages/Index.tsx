@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
 import ProductGrid from "@/components/ProductGrid";
 import Banner from "@/components/Banner";
+import NewsletterSection from "@/components/NewsletterSection";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowRight, ShoppingBag, Truck, Shield, Star, Zap } from "lucide-react";
+import { ArrowRight, ShoppingBag, Truck, Shield, Star, Zap, Percent, Clock } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
 import { motion } from "framer-motion";
 
@@ -155,9 +156,45 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Promotional Banner */}
+      <section className="container py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-8 md:p-10">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-3">
+                <Percent className="h-5 w-5" />
+                <span className="text-sm font-semibold uppercase tracking-wider">Limited Offer</span>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-bold mb-2">Up to 50% Off</h3>
+              <p className="text-primary-foreground/80 text-sm mb-6">On selected products this season. Don't miss out!</p>
+              <Button variant="secondary" size="lg" asChild>
+                <Link to="/products">Shop Sale <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+            </div>
+          </div>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent to-accent/80 text-accent-foreground p-8 md:p-10">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="h-5 w-5" />
+                <span className="text-sm font-semibold uppercase tracking-wider">New Arrivals</span>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-bold mb-2">Fresh Collection</h3>
+              <p className="text-accent-foreground/80 text-sm mb-6">Check out the latest trending products just added.</p>
+              <Button variant="secondary" size="lg" asChild>
+                <Link to="/products">Explore <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Categories */}
       {categoriesQuery.data && categoriesQuery.data.length > 0 && (
-        <section className="container py-12 md:py-16">
+        <section className="container pb-12 md:pb-16">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold">Shop by Category</h2>
@@ -202,8 +239,11 @@ export default function Index() {
         />
       </section>
 
-      {/* Promo Banner */}
-      <section className="container pb-12 md:pb-16">
+      {/* Newsletter */}
+      <NewsletterSection />
+
+      {/* CTA Banner */}
+      <section className="container py-12 md:py-16">
         <Banner
           title="Ready to start shopping?"
           subtitle="Create your free account today and get access to exclusive deals and offers."
