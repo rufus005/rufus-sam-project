@@ -459,4 +459,7 @@ export default function Checkout() {
             </div>
           </DialogContent>
         </Dialog>
+      </div>
+    </Layout>
+  );
 }
