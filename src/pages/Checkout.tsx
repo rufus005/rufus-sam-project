@@ -363,26 +363,26 @@ export default function Checkout() {
                 <div className="space-y-2">
                   <label
                     className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      paymentMethod === "razorpay" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                      paymentMethod === "online" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
                     }`}
                   >
                     <input
                       type="radio"
                       name="payment"
-                      value="razorpay"
-                      checked={paymentMethod === "razorpay"}
-                      onChange={() => setPaymentMethod("razorpay")}
+                      value="online"
+                      checked={paymentMethod === "online"}
+                      onChange={() => setPaymentMethod("online")}
                       className="sr-only"
                     />
                     <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      paymentMethod === "razorpay" ? "border-primary" : "border-muted-foreground"
+                      paymentMethod === "online" ? "border-primary" : "border-muted-foreground"
                     }`}>
-                      {paymentMethod === "razorpay" && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
+                      {paymentMethod === "online" && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
                     </div>
                     <CreditCard className="h-5 w-5 text-primary" />
                     <div>
-                      <p className="font-medium text-sm">Pay with Razorpay</p>
-                      <p className="text-xs text-muted-foreground">Credit/Debit Card, UPI, Net Banking</p>
+                      <p className="font-medium text-sm">Pay Online</p>
+                      <p className="text-xs text-muted-foreground">Simulated payment (Credit/Debit Card, UPI)</p>
                     </div>
                   </label>
                   <label
@@ -425,12 +425,38 @@ export default function Checkout() {
 
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span>{paymentMethod === "razorpay" ? "🔒 Razorpay Test Mode — No real charges" : "💰 Cash on Delivery — Pay when received"}</span>
+                <span>{paymentMethod === "online" ? "🔒 Simulated Payment — No real charges" : "💰 Cash on Delivery — Pay when received"}</span>
               </div>
             </div>
           </div>
         )}
-      </div>
-    </Layout>
-  );
+
+        {/* Fake Payment Simulation Dialog */}
+        <Dialog open={showPaymentSim} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+            <DialogHeader>
+              <DialogTitle>
+                {paymentSimStep === "processing" ? "Processing Payment..." : "Payment Successful!"}
+              </DialogTitle>
+              <DialogDescription>
+                {paymentSimStep === "processing"
+                  ? `Charging ${formatPrice(cartTotal)} to your account`
+                  : "Your payment has been confirmed"}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center py-8 gap-4">
+              {paymentSimStep === "processing" && (
+                <Loader2 className="h-12 w-12 text-primary animate-spin" />
+              )}
+              {paymentSimStep === "success" && (
+                <CheckCircle2 className="h-12 w-12 text-green-500" />
+              )}
+              <p className="text-sm text-muted-foreground text-center">
+                {paymentSimStep === "processing"
+                  ? "Please wait while we process your payment..."
+                  : "Redirecting to order confirmation..."}
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
 }
