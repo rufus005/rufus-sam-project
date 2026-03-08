@@ -25,7 +25,9 @@ export default function Checkout() {
   const { items, cartTotal, clearCart, isLoading: cartLoading } = useCart();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">("razorpay");
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+  const [showPaymentSim, setShowPaymentSim] = useState(false);
+  const [paymentSimStep, setPaymentSimStep] = useState<"processing" | "success" | "idle">("idle");
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
