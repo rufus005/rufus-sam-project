@@ -36,7 +36,7 @@ export default function OrderConfirmation() {
             <p className="text-sm text-muted-foreground mb-1">Order ID</p>
             <p className="font-mono text-sm mb-4">{order.id}</p>
             <p className="text-sm text-muted-foreground mb-1">Total</p>
-            <p className="font-bold text-lg mb-4">${Number(order.total).toFixed(2)}</p>
+            <p className="font-bold text-lg mb-4">{formatPrice(order.total)}</p>
             <p className="text-sm text-muted-foreground mb-1">Status</p>
             <p className="capitalize">{order.status}</p>
 
