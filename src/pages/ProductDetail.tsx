@@ -31,7 +31,7 @@ export default function ProductDetail() {
         .from("products")
         .select("*, categories(name, slug)")
         .eq("slug", slug!)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
