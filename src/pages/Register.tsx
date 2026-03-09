@@ -43,15 +43,9 @@ export default function Register() {
     if (error) {
       toast.error(error.message);
     } else {
-      // Send OTP for email verification
-      const { error: otpError } = await supabase.auth.signInWithOtp({ email });
-      if (otpError) {
-        toast.error("Account created but failed to send OTP. Please sign in with OTP from the login page.");
-      } else {
-        setStep("otp");
-        setResendCooldown(60);
-        toast.success("Account created! Enter the 6-digit OTP sent to your email.");
-      }
+      setStep("otp");
+      setResendCooldown(60);
+      toast.success("Account created! Check your email for the verification code.");
     }
     setLoading(false);
   };
