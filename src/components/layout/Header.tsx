@@ -64,7 +64,6 @@ export default function Header() {
               Rufus Sam
             </div>
             <nav className="flex flex-col gap-1">
-              <Link to="/" className="px-3 py-2.5 rounded-lg text-base font-medium hover:bg-secondary transition-colors">Home</Link>
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
