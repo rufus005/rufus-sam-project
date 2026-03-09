@@ -15,6 +15,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [step, setStep] = useState<"form" | "otp">("form");
   const [resendCooldown, setResendCooldown] = useState(0);
   const navigate = useNavigate();
@@ -27,40 +28,65 @@ export default function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSendingEmail || loading) return;
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      setStep("otp");
-      setResendCooldown(60);
-      toast.success("Account created! Check your email for the verification code.");
+    setIsSendingEmail(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      if (error) {
+        if (error.message?.toLowerCase().includes("rate limit")) {
+          toast.error("Too many attempts. Please wait a few minutes before trying again.");
+          setResendCooldown(60);
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        setStep("otp");
+        setResendCooldown(60);
+        toast.success("Account created! Check your email for the verification code.");
+      }
+    } catch {
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+      setIsSendingEmail(false);
     }
-    setLoading(false);
   };
 
   const handleResendOtp = async () => {
-    if (resendCooldown > 0) return;
+    if (resendCooldown > 0 || isSendingEmail || loading) return;
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      setResendCooldown(60);
-      toast.success("OTP resent to your email.");
+    setIsSendingEmail(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      if (error) {
+        if (error.message?.toLowerCase().includes("rate limit")) {
+          toast.error("Too many attempts. Please wait a few minutes before trying again.");
+          setResendCooldown(60);
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        setResendCooldown(60);
+        toast.success("OTP resent to your email.");
+      }
+    } catch {
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+      setIsSendingEmail(false);
     }
-    setLoading(false);
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -184,8 +210,8 @@ export default function Register() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full h-11" disabled={loading}>
-              {loading ? "Creating account..." : "Create account"}
+            <Button type="submit" className="w-full h-11" disabled={loading || isSendingEmail}>
+              {isSendingEmail ? "Creating account..." : "Create account"}
             </Button>
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
