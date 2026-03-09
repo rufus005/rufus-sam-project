@@ -138,6 +138,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
               <Users className="h-4 w-4 text-primary" />
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden shrink-0 text-destructive hover:bg-destructive/10"
+              onClick={signOut}
+              title="Logout"
+            >
+              <LogOut className="h-4.5 w-4.5" />
+            </Button>
           </div>
         </header>
 
