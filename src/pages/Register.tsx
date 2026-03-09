@@ -210,8 +210,8 @@ export default function Register() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full h-11" disabled={loading}>
-              {loading ? "Creating account..." : "Create account"}
+            <Button type="submit" className="w-full h-11" disabled={loading || isSendingEmail}>
+              {isSendingEmail ? "Creating account..." : "Create account"}
             </Button>
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
