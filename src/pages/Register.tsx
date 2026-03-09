@@ -65,16 +65,28 @@ export default function Register() {
   };
 
   const handleResendOtp = async () => {
-    if (resendCooldown > 0) return;
+    if (resendCooldown > 0 || isSendingEmail || loading) return;
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      setResendCooldown(60);
-      toast.success("OTP resent to your email.");
+    setIsSendingEmail(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      if (error) {
+        if (error.message?.toLowerCase().includes("rate limit")) {
+          toast.error("Too many attempts. Please wait a few minutes before trying again.");
+          setResendCooldown(60);
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        setResendCooldown(60);
+        toast.success("OTP resent to your email.");
+      }
+    } catch {
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+      setIsSendingEmail(false);
     }
-    setLoading(false);
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
