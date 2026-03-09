@@ -15,6 +15,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [step, setStep] = useState<"form" | "otp">("form");
   const [resendCooldown, setResendCooldown] = useState(0);
   const navigate = useNavigate();
