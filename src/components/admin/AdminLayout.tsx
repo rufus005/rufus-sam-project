@@ -78,7 +78,7 @@ function SidebarContent({ pathname }: { pathname: string }) {
 }
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -121,7 +121,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-64 p-0 flex flex-col h-full">
               <SheetTitle className="sr-only">Admin Navigation</SheetTitle>
               <SidebarContent pathname={location.pathname} />
             </SheetContent>
@@ -138,6 +138,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
               <Users className="h-4 w-4 text-primary" />
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden shrink-0 text-destructive hover:bg-destructive/10"
+              onClick={signOut}
+              title="Logout"
+            >
+              <LogOut className="h-4.5 w-4.5" />
+            </Button>
           </div>
         </header>
 
