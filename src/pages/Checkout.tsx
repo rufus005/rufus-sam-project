@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,10 @@ import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
+import { Check, ShoppingCart, MapPin, CreditCard, Banknote, ShieldCheck, AlertTriangle, Loader2 } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
+const CASHFREE_APP_ID = "TEST11011003889f71c48a830b51677630011011";
 
 const STEPS = [
   { label: "Cart Summary", icon: ShoppingCart },
@@ -19,15 +19,29 @@ const STEPS = [
   { label: "Payment", icon: CreditCard },
 ];
 
+// Load Cashfree SDK
+function loadCashfreeSDK(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if ((window as any).Cashfree) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Cashfree SDK"));
+    document.head.appendChild(script);
+  });
+}
+
 export default function Checkout() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { items, cartTotal, clearCart, isLoading: cartLoading } = useCart();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
-  const [showPaymentSim, setShowPaymentSim] = useState(false);
-  const [paymentSimStep, setPaymentSimStep] = useState<"processing" | "success" | "idle">("idle");
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
@@ -37,6 +51,48 @@ export default function Checkout() {
     postalCode: "",
     country: "India",
   });
+
+  // Handle return from Cashfree redirect
+  const handlePaymentReturn = useCallback(async () => {
+    const cfOrderId = searchParams.get("order_id");
+    const dbOrderId = sessionStorage.getItem("pending_db_order_id");
+    
+    if (cfOrderId && dbOrderId) {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("create-cashfree-order", {
+          body: {
+            action: "verify_payment",
+            cashfreeOrderId: cfOrderId,
+            dbOrderId: dbOrderId,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data.status === "paid") {
+          await clearCart.mutateAsync();
+          sessionStorage.removeItem("pending_db_order_id");
+          sessionStorage.removeItem("pending_cf_order_id");
+          toast({ title: "Payment successful! Order confirmed." });
+          navigate(`/order-confirmation/${data.order_id}`);
+        } else {
+          toast({
+            title: "Payment not completed",
+            description: `Status: ${data.status}. Please try again.`,
+            variant: "destructive",
+          });
+        }
+      } catch (err: any) {
+        toast({ title: "Payment verification failed", description: err.message, variant: "destructive" });
+      }
+      setLoading(false);
+    }
+  }, [searchParams, clearCart, navigate]);
+
+  useEffect(() => {
+    handlePaymentReturn();
+  }, [handlePaymentReturn]);
 
   if (!user) {
     return (
@@ -49,17 +105,18 @@ export default function Checkout() {
     );
   }
 
-  if (cartLoading) {
+  if (cartLoading || loading) {
     return (
       <Layout>
         <div className="container py-16 text-center">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
+          <p className="mt-4 text-muted-foreground">{loading ? "Processing payment..." : "Loading cart..."}</p>
         </div>
       </Layout>
     );
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !searchParams.get("order_id")) {
     return (
       <Layout>
         <div className="container py-16 text-center">
@@ -98,106 +155,132 @@ export default function Checkout() {
     setStep(2);
   };
 
-  // Validate stock before placing order
-  const validateStock = async (): Promise<boolean> => {
-    for (const item of items) {
-      const { data: product } = await supabase
-        .from("products")
-        .select("stock_quantity, name")
-        .eq("id", item.product_id)
-        .maybeSingle();
-      if (!product) {
-        toast({ title: `Product "${item.product.name}" is no longer available`, variant: "destructive" });
-        return false;
-      }
-      if (product.stock_quantity < item.quantity) {
-        toast({
-          title: `Insufficient stock for "${product.name}"`,
-          description: `Only ${product.stock_quantity} available, but ${item.quantity} requested.`,
-          variant: "destructive",
-        });
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const placeOrder = async (paymentId: string, paymentStatus: string) => {
-    // Validate stock first
-    const stockValid = await validateStock();
-    if (!stockValid) return;
-
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        user_id: user.id,
-        total: cartTotal,
-        shipping_address: {
-          full_name: form.fullName,
-          phone: form.phone,
-          street_address: form.streetAddress,
-          city: form.city,
-          state: form.state,
-          postal_code: form.postalCode,
-          country: form.country,
-        },
-        status: "pending",
-        payment_intent_id: paymentId,
-        payment_status: paymentStatus,
-      })
-      .select()
-      .single();
-
-    if (orderError) throw orderError;
-
-    const orderItems = items.map((item) => ({
-      order_id: order.id,
-      product_id: item.product_id,
-      product_name: item.product.name,
-      product_image: item.product.image_url,
-      price: item.product.price,
-      quantity: item.quantity,
-    }));
-
-    const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-    if (itemsError) throw itemsError;
-
-    await clearCart.mutateAsync();
-    navigate(`/order-confirmation/${order.id}`);
-  };
-
   const handleCOD = async () => {
     setLoading(true);
     try {
-      await placeOrder("cod_" + Date.now(), "cod");
+      // Validate stock
+      for (const item of items) {
+        const { data: product } = await supabase
+          .from("products")
+          .select("stock_quantity, name")
+          .eq("id", item.product_id)
+          .maybeSingle();
+        if (!product || product.stock_quantity < item.quantity) {
+          toast({
+            title: `Insufficient stock for "${product?.name || item.product.name}"`,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id: user.id,
+          total: cartTotal,
+          shipping_address: {
+            full_name: form.fullName,
+            phone: form.phone,
+            street_address: form.streetAddress,
+            city: form.city,
+            state: form.state,
+            postal_code: form.postalCode,
+            country: form.country,
+          },
+          status: "pending",
+          payment_intent_id: "cod_" + Date.now(),
+          payment_status: "cod",
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      const orderItems = items.map((item) => ({
+        order_id: order.id,
+        product_id: item.product_id,
+        product_name: item.product.name,
+        product_image: item.product.image_url,
+        price: item.product.price,
+        quantity: item.quantity,
+      }));
+
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+      if (itemsError) throw itemsError;
+
+      await clearCart.mutateAsync();
       toast({ title: "Order placed successfully! Pay on delivery." });
+      navigate(`/order-confirmation/${order.id}`);
     } catch (err: any) {
       toast({ title: "Order failed", description: err.message, variant: "destructive" });
     }
     setLoading(false);
   };
 
-  const handleOnlinePayment = () => {
-    setShowPaymentSim(true);
-    setPaymentSimStep("processing");
-    // Simulate payment processing (2 seconds)
-    setTimeout(() => {
-      setPaymentSimStep("success");
-      // After showing success, place the order
-      setTimeout(async () => {
-        setLoading(true);
-        try {
-          const fakePaymentId = "sim_pay_" + Date.now();
-          await placeOrder(fakePaymentId, "paid");
-          toast({ title: "Payment successful! Order placed." });
-        } catch (err: any) {
-          toast({ title: "Order failed", description: err.message, variant: "destructive" });
-        }
-        setShowPaymentSim(false);
-        setPaymentSimStep("idle");
-        setLoading(false);
-      }, 1500);
-    }, 2000);
+  const handleOnlinePayment = async () => {
+    setLoading(true);
+    try {
+      await loadCashfreeSDK();
+
+      const returnUrl = `${window.location.origin}/checkout`;
+
+      const cartItemsPayload = items.map((item) => ({
+        product_id: item.product_id,
+        product_name: item.product.name,
+        product_image: item.product.image_url,
+        price: item.product.price,
+        quantity: item.quantity,
+      }));
+
+      const { data, error } = await supabase.functions.invoke("create-cashfree-order", {
+        body: {
+          action: "create_order",
+          amount: cartTotal,
+          customerName: form.fullName,
+          customerPhone: form.phone.replace(/\s/g, ""),
+          customerEmail: user.email || "customer@example.com",
+          returnUrl,
+          shippingAddress: {
+            full_name: form.fullName,
+            phone: form.phone,
+            street_address: form.streetAddress,
+            city: form.city,
+            state: form.state,
+            postal_code: form.postalCode,
+            country: form.country,
+          },
+          cartItems: cartItemsPayload,
+        },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      const { payment_session_id, cashfree_order_id, db_order_id } = data;
+
+      // Store IDs for verification after redirect
+      sessionStorage.setItem("pending_db_order_id", db_order_id);
+      sessionStorage.setItem("pending_cf_order_id", cashfree_order_id);
+
+      const cashfree = (window as any).Cashfree({ mode: "sandbox" });
+
+      const checkoutOptions = {
+        paymentSessionId: payment_session_id,
+        redirectTarget: "_self",
+      };
+
+      await cashfree.checkout(checkoutOptions);
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      toast({
+        title: "Payment failed",
+        description: err.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
   };
 
   const handlePayment = () => {
@@ -205,7 +288,6 @@ export default function Checkout() {
     else handleOnlinePayment();
   };
 
-  // Check for out-of-stock items
   const outOfStockItems = items.filter((item) => item.product.stock_quantity <= 0);
 
   return (
@@ -390,7 +472,7 @@ export default function Checkout() {
                     <CreditCard className="h-5 w-5 text-primary" />
                     <div>
                       <p className="font-medium text-sm">Pay Online</p>
-                      <p className="text-xs text-muted-foreground">Simulated payment (Credit/Debit Card, UPI)</p>
+                      <p className="text-xs text-muted-foreground">Credit/Debit Card, UPI, Net Banking via Cashfree</p>
                     </div>
                   </label>
                   <label
@@ -423,50 +505,23 @@ export default function Checkout() {
               <div className="flex gap-4">
                 <Button variant="outline" className="h-12" onClick={() => setStep(1)}>Back</Button>
                 <Button className="flex-1 h-12" size="lg" onClick={handlePayment} disabled={loading}>
-                  {loading
-                    ? "Processing..."
-                    : paymentMethod === "cod"
-                    ? "Place Order (COD)"
-                    : `Pay ${formatPrice(cartTotal)}`}
+                  {loading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</>
+                  ) : paymentMethod === "cod" ? (
+                    "Place Order (COD)"
+                  ) : (
+                    `Pay ${formatPrice(cartTotal)}`
+                  )}
                 </Button>
               </div>
 
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span>{paymentMethod === "online" ? "🔒 Simulated Payment — No real charges" : "💰 Cash on Delivery — Pay when received"}</span>
+                <span>{paymentMethod === "online" ? "🔒 Secure payment via Cashfree" : "💰 Cash on Delivery — Pay when received"}</span>
               </div>
             </div>
           </div>
         )}
-
-        {/* Fake Payment Simulation Dialog */}
-        <Dialog open={showPaymentSim} onOpenChange={() => {}}>
-          <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
-            <DialogHeader>
-              <DialogTitle>
-                {paymentSimStep === "processing" ? "Processing Payment..." : "Payment Successful!"}
-              </DialogTitle>
-              <DialogDescription>
-                {paymentSimStep === "processing"
-                  ? `Charging ${formatPrice(cartTotal)} to your account`
-                  : "Your payment has been confirmed"}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col items-center justify-center py-8 gap-4">
-              {paymentSimStep === "processing" && (
-                <Loader2 className="h-12 w-12 text-primary animate-spin" />
-              )}
-              {paymentSimStep === "success" && (
-                <CheckCircle2 className="h-12 w-12 text-green-500" />
-              )}
-              <p className="text-sm text-muted-foreground text-center">
-                {paymentSimStep === "processing"
-                  ? "Please wait while we process your payment..."
-                  : "Redirecting to order confirmation..."}
-              </p>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </Layout>
   );
