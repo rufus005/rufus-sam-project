@@ -42,6 +42,8 @@ export default function Checkout() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "verifying" | "success" | "failed">("idle");
+  const [completedOrderId, setCompletedOrderId] = useState<string | null>(null);
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
@@ -58,6 +60,7 @@ export default function Checkout() {
     const dbOrderId = sessionStorage.getItem("pending_db_order_id");
     
     if (cfOrderId && dbOrderId) {
+      setPaymentStatus("verifying");
       setLoading(true);
       try {
         const { data, error } = await supabase.functions.invoke("create-cashfree-order", {
@@ -74,9 +77,10 @@ export default function Checkout() {
           await clearCart.mutateAsync();
           sessionStorage.removeItem("pending_db_order_id");
           sessionStorage.removeItem("pending_cf_order_id");
-          toast({ title: "Payment successful! Order confirmed." });
-          navigate(`/order-confirmation/${data.order_id}`);
+          setCompletedOrderId(data.order_id);
+          setPaymentStatus("success");
         } else {
+          setPaymentStatus("failed");
           toast({
             title: "Payment not completed",
             description: `Status: ${data.status}. Please try again.`,
@@ -84,15 +88,73 @@ export default function Checkout() {
           });
         }
       } catch (err: any) {
+        setPaymentStatus("failed");
         toast({ title: "Payment verification failed", description: err.message, variant: "destructive" });
       }
       setLoading(false);
     }
-  }, [searchParams, clearCart, navigate]);
+  }, [searchParams, clearCart]);
 
   useEffect(() => {
     handlePaymentReturn();
   }, [handlePaymentReturn]);
+
+  // Show post-payment result screen
+  if (paymentStatus === "verifying") {
+    return (
+      <Layout>
+        <div className="container py-16 text-center max-w-md mx-auto">
+          <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
+          <h1 className="text-2xl font-bold mt-6">Verifying Payment...</h1>
+          <p className="text-muted-foreground mt-2">Please wait while we confirm your payment.</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (paymentStatus === "success" && completedOrderId) {
+    return (
+      <Layout>
+        <div className="container py-16 text-center max-w-md mx-auto">
+          <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto">
+            <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+          </div>
+          <h1 className="text-2xl font-bold mt-6">Payment Successful!</h1>
+          <p className="text-muted-foreground mt-2">Your order has been confirmed.</p>
+          <div className="flex flex-col sm:flex-row gap-3 mt-8 justify-center">
+            <Button onClick={() => navigate(`/order-confirmation/${completedOrderId}`)}>
+              View Order Details
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/products")}>
+              Continue Shopping
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (paymentStatus === "failed") {
+    return (
+      <Layout>
+        <div className="container py-16 text-center max-w-md mx-auto">
+          <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+          </div>
+          <h1 className="text-2xl font-bold mt-6">Payment Failed</h1>
+          <p className="text-muted-foreground mt-2">Your payment could not be processed. Please try again.</p>
+          <div className="flex flex-col sm:flex-row gap-3 mt-8 justify-center">
+            <Button onClick={() => { setPaymentStatus("idle"); navigate("/checkout", { replace: true }); }}>
+              Try Again
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/cart")}>
+              Back to Cart
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!user) {
     return (
