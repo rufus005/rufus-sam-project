@@ -42,7 +42,8 @@ export default function Checkout() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
-  const [form, setForm] = useState({
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "verifying" | "success" | "failed">("idle");
+  const [completedOrderId, setCompletedOrderId] = useState<string | null>(null);
     fullName: "",
     phone: "",
     streetAddress: "",
