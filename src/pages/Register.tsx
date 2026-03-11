@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,19 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { toast } from "sonner";
 import { Mail, Lock, User, ShoppingBag, KeyRound, RefreshCw } from "lucide-react";
 
+/** Extracts a user-friendly error message from Supabase auth errors */
+function getAuthErrorMessage(error: { message: string }): string {
+  const msg = error.message.toLowerCase();
+  if (msg.includes("already registered") || msg.includes("already been registered")) return "This email is already registered. Please sign in instead.";
+  if (msg.includes("rate limit")) return "Too many attempts. Please wait a few minutes before trying again.";
+  if (msg.includes("password")) return "Password must be at least 6 characters.";
+  if (msg.includes("valid email") || msg.includes("invalid email")) return "Please enter a valid email address.";
+  if (msg.includes("network")) return "Network error. Please check your connection.";
+  return error.message;
+}
+
 export default function Register() {
+  const { user } = useAuth();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,37 +33,38 @@ export default function Register() {
   const [resendCooldown, setResendCooldown] = useState(0);
   const navigate = useNavigate();
 
+  /** Redirect already-authenticated users to home */
+  useEffect(() => {
+    if (user) navigate("/", { replace: true });
+  }, [user, navigate]);
+
+  /** Countdown timer for OTP resend cooldown */
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [resendCooldown]);
 
+  /** Handle account creation and send verification OTP */
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSendingEmail || loading) return;
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
+    if (!fullName.trim()) { toast.error("Please enter your full name"); return; }
+    if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setLoading(true);
     setIsSendingEmail(true);
     try {
       const { error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
-          data: { full_name: fullName },
+          data: { full_name: fullName.trim() },
           emailRedirectTo: window.location.origin,
         },
       });
       if (error) {
-        if (error.message?.toLowerCase().includes("rate limit")) {
-          toast.error("Too many attempts. Please wait a few minutes before trying again.");
-          setResendCooldown(60);
-        } else {
-          toast.error(error.message);
-        }
+        toast.error(getAuthErrorMessage(error));
+        if (error.message?.toLowerCase().includes("rate limit")) setResendCooldown(60);
       } else {
         setStep("otp");
         setResendCooldown(60);
@@ -64,19 +78,16 @@ export default function Register() {
     }
   };
 
+  /** Resend the OTP verification code */
   const handleResendOtp = async () => {
     if (resendCooldown > 0 || isSendingEmail || loading) return;
     setLoading(true);
     setIsSendingEmail(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      const { error } = await supabase.auth.signInWithOtp({ email: email.trim() });
       if (error) {
-        if (error.message?.toLowerCase().includes("rate limit")) {
-          toast.error("Too many attempts. Please wait a few minutes before trying again.");
-          setResendCooldown(60);
-        } else {
-          toast.error(error.message);
-        }
+        toast.error(getAuthErrorMessage(error));
+        if (error.message?.toLowerCase().includes("rate limit")) setResendCooldown(60);
       } else {
         setResendCooldown(60);
         toast.success("OTP resent to your email.");
@@ -89,21 +100,26 @@ export default function Register() {
     }
   };
 
+  /** Verify the 6-digit OTP and complete registration */
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length !== 6) { toast.error("Please enter the full 6-digit OTP"); return; }
     setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: "email",
-    });
-    if (error) {
-      toast.error("Invalid or expired OTP. Please try again.");
-      setOtp("");
-    } else {
-      toast.success("Email verified! Welcome to Rufus Sam!");
-      navigate("/");
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: otp,
+        type: "email",
+      });
+      if (error) {
+        toast.error("Invalid or expired OTP. Please try again.");
+        setOtp("");
+      } else {
+        toast.success("Email verified! Welcome to Rufus Sam!");
+        navigate("/");
+      }
+    } catch {
+      toast.error("An unexpected error occurred. Please try again.");
     }
     setLoading(false);
   };
