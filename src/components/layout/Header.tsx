@@ -18,12 +18,13 @@ import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { supabase } from "@/integrations/supabase/client";
 
-const navLinks = [
+/** Navigation links used in both desktop and mobile menus */
+const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Products", href: "/products" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
-];
+] as const;
 
 export default function Header() {
   const { user, signOut } = useAuth();
@@ -35,11 +36,13 @@ export default function Header() {
   const [isAdmin, setIsAdmin] = useState(false);
   const { theme, setTheme } = useTheme();
 
+  /** Check admin role when user changes */
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
     supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => setIsAdmin(!!data));
   }, [user]);
 
+  /** Navigate to products page with search query */
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -49,7 +52,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center gap-4">
+      <div className="container flex h-16 items-center gap-2 px-4">
         {/* Mobile menu */}
         <Sheet>
           <SheetTrigger asChild>
@@ -64,7 +67,7 @@ export default function Header() {
               Rufus Sam
             </div>
             <nav className="flex flex-col gap-1">
-              {navLinks.map((link) => (
+              {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
@@ -95,7 +98,7 @@ export default function Header() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1 ml-6">
-          {navLinks.map((link) => (
+          {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               to={link.href}
@@ -110,7 +113,7 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Search */}
+        {/* Search - takes remaining space */}
         <form onSubmit={handleSearch} className="flex-1 max-w-md mx-auto hidden sm:block">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -123,21 +126,22 @@ export default function Header() {
           </div>
         </form>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1">
+        {/* Actions - no extra spacing on mobile */}
+        <div className="flex items-center gap-0.5 sm:gap-1 ml-auto shrink-0">
           {/* Dark mode toggle */}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             aria-label="Toggle dark mode"
+            className="h-9 w-9"
           >
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
           </Button>
 
           {/* Wishlist */}
-          <Button variant="ghost" size="icon" asChild className="relative hidden sm:flex">
+          <Button variant="ghost" size="icon" asChild className="relative hidden sm:flex h-9 w-9">
             <Link to="/wishlist">
               <Heart className="h-5 w-5" />
               {wishlistCount > 0 && (
@@ -149,7 +153,7 @@ export default function Header() {
           </Button>
 
           {/* Cart */}
-          <Button variant="ghost" size="icon" asChild className="relative">
+          <Button variant="ghost" size="icon" asChild className="relative h-9 w-9">
             <Link to="/cart">
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
@@ -163,7 +167,7 @@ export default function Header() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9">
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -191,7 +195,7 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button size="sm" asChild>
+            <Button size="sm" asChild className="ml-1">
               <Link to="/login">Sign in</Link>
             </Button>
           )}

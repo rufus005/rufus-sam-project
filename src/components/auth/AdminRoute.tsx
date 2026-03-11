@@ -3,10 +3,16 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Wraps admin-only routes. Checks for authentication AND admin role
+ * via the has_role RPC. Redirects non-admin users to home and
+ * unauthenticated users to the admin login page.
+ */
 export function AdminRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
+  /** Verify admin role via server-side RPC (not client storage) */
   useEffect(() => {
     if (!user) {
       setIsAdmin(false);
@@ -14,7 +20,14 @@ export function AdminRoute({ children }: { children: ReactNode }) {
     }
     supabase
       .rpc("has_role", { _user_id: user.id, _role: "admin" })
-      .then(({ data }) => setIsAdmin(!!data));
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Admin role check failed:", error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(!!data);
+        }
+      });
   }, [user]);
 
   if (loading || isAdmin === null) {

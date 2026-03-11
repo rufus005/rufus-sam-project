@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Mail, ShoppingBag, KeyRound, RefreshCw, Lock } from "lucide-react";
 
+/** Extracts a user-friendly error message from Supabase auth errors */
+function getAuthErrorMessage(error: { message: string }): string {
+  const msg = error.message.toLowerCase();
+  if (msg.includes("invalid login credentials")) return "Incorrect email or password. Please try again.";
+  if (msg.includes("email not confirmed")) return "Your email is not verified. Please check your inbox.";
+  if (msg.includes("rate limit")) return "Too many attempts. Please wait a few minutes.";
+  if (msg.includes("user not found")) return "No account found with this email.";
+  if (msg.includes("network")) return "Network error. Please check your connection.";
+  return error.message;
+}
+
 export default function Login() {
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
@@ -20,38 +33,54 @@ export default function Login() {
   const [tab, setTab] = useState("password");
   const navigate = useNavigate();
 
+  /** Redirect already-authenticated users to home */
+  useEffect(() => {
+    if (user) navigate("/", { replace: true });
+  }, [user, navigate]);
+
+  /** Countdown timer for OTP resend cooldown */
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [resendCooldown]);
 
-  // --- Password login ---
+  /** Handle password-based login with error handling */
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) { toast.error("Please fill in all fields"); return; }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Welcome back!");
-      navigate("/");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) {
+        toast.error(getAuthErrorMessage(error));
+        if (error.message.toLowerCase().includes("rate limit")) setResendCooldown(60);
+      } else {
+        toast.success("Welcome back!");
+        navigate("/");
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
     }
     setLoading(false);
   };
 
-  // --- OTP login ---
+  /** Send a one-time password to the user's email */
   const sendOtp = async () => {
     if (!email.trim()) { toast.error("Please enter your email"); return; }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      setOtpSent(true);
-      setResendCooldown(60);
-      toast.success("A 6-digit OTP has been sent to your email.");
+    try {
+      const { error } = await supabase.auth.signInWithOtp({ email: email.trim() });
+      if (error) {
+        toast.error(getAuthErrorMessage(error));
+        if (error.message.toLowerCase().includes("rate limit")) setResendCooldown(60);
+      } else {
+        setOtpSent(true);
+        setResendCooldown(60);
+        toast.success("A 6-digit OTP has been sent to your email.");
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
     }
     setLoading(false);
   };
@@ -61,22 +90,28 @@ export default function Login() {
     await sendOtp();
   };
 
+  /** Resend OTP with cooldown enforcement */
   const handleResendOtp = async () => {
     if (resendCooldown > 0) return;
     await sendOtp();
   };
 
+  /** Verify the 6-digit OTP entered by the user */
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length !== 6) { toast.error("Please enter the full 6-digit OTP"); return; }
     setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
-    if (error) {
-      toast.error("Invalid or expired OTP. Please try again.");
-      setOtp("");
-    } else {
-      toast.success("Welcome back!");
-      navigate("/");
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: otp, type: "email" });
+      if (error) {
+        toast.error("Invalid or expired OTP. Please try again.");
+        setOtp("");
+      } else {
+        toast.success("Welcome back!");
+        navigate("/");
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
     }
     setLoading(false);
   };
