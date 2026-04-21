@@ -326,7 +326,7 @@ export default function Checkout() {
       sessionStorage.setItem("pending_db_order_id", db_order_id);
       sessionStorage.setItem("pending_cf_order_id", cashfree_order_id);
 
-      const cashfree = (window as any).Cashfree({ mode: "sandbox" });
+      const cashfree = (window as any).Cashfree({ mode: "production" });
 
       const checkoutOptions = {
         paymentSessionId: payment_session_id,
