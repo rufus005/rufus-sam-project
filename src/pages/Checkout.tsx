@@ -41,7 +41,7 @@ export default function Checkout() {
   const { items, cartTotal, clearCart, isLoading: cartLoading } = useCart();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+  const [paymentMethod] = useState<"cod">("cod");
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "verifying" | "success" | "failed">("idle");
   const [completedOrderId, setCompletedOrderId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -346,8 +346,7 @@ export default function Checkout() {
   };
 
   const handlePayment = () => {
-    if (paymentMethod === "cod") handleCOD();
-    else handleOnlinePayment();
+    handleCOD();
   };
 
   const outOfStockItems = items.filter((item) => item.product.stock_quantity <= 0);
@@ -509,58 +508,15 @@ export default function Checkout() {
                 </p>
               </div>
 
-              {/* Payment method selection */}
-              <div className="rounded-2xl border bg-card p-5 space-y-3">
-                <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Payment Method</h3>
-                <div className="space-y-2">
-                  <label
-                    className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      paymentMethod === "online" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="online"
-                      checked={paymentMethod === "online"}
-                      onChange={() => setPaymentMethod("online")}
-                      className="sr-only"
-                    />
-                    <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      paymentMethod === "online" ? "border-primary" : "border-muted-foreground"
-                    }`}>
-                      {paymentMethod === "online" && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
-                    </div>
-                    <CreditCard className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="font-medium text-sm">Pay Online</p>
-                      <p className="text-xs text-muted-foreground">Credit/Debit Card, UPI, Net Banking via Cashfree</p>
-                    </div>
-                  </label>
-                  <label
-                    className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      paymentMethod === "cod" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="cod"
-                      checked={paymentMethod === "cod"}
-                      onChange={() => setPaymentMethod("cod")}
-                      className="sr-only"
-                    />
-                    <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      paymentMethod === "cod" ? "border-primary" : "border-muted-foreground"
-                    }`}>
-                      {paymentMethod === "cod" && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
-                    </div>
-                    <Banknote className="h-5 w-5 text-accent" />
-                    <div>
-                      <p className="font-medium text-sm">Cash on Delivery</p>
-                      <p className="text-xs text-muted-foreground">Pay when you receive your order</p>
-                    </div>
-                  </label>
+              {/* Payment method - COD only */}
+              <div className="rounded-2xl border-2 border-primary bg-primary/5 p-5">
+                <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-3">Payment Method</h3>
+                <div className="flex items-center gap-3">
+                  <Banknote className="h-6 w-6 text-accent" />
+                  <div>
+                    <p className="font-medium text-sm">Cash on Delivery</p>
+                    <p className="text-xs text-muted-foreground">Pay when you receive your order</p>
+                  </div>
                 </div>
               </div>
 
@@ -569,17 +525,15 @@ export default function Checkout() {
                 <Button className="flex-1 h-12" size="lg" onClick={handlePayment} disabled={loading}>
                   {loading ? (
                     <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</>
-                  ) : paymentMethod === "cod" ? (
-                    "Place Order (COD)"
                   ) : (
-                    `Pay ${formatPrice(cartTotal)}`
+                    "Place Order (COD)"
                   )}
                 </Button>
               </div>
 
               <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                <span>{paymentMethod === "online" ? "🔒 Secure payment via Cashfree" : "💰 Cash on Delivery — Pay when received"}</span>
+                <span>💰 Cash on Delivery — Pay when received</span>
               </div>
             </div>
           </div>
