@@ -8,6 +8,7 @@ import CategoriesSection from "@/components/home/CategoriesSection";
 import ProductSection from "@/components/home/ProductSection";
 import WhyChooseUsSection from "@/components/home/WhyChooseUsSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
+import BranchesSection from "@/components/home/BranchesSection";
 import Banner from "@/components/Banner";
 import NewsletterSection from "@/components/NewsletterSection";
 import { useCart } from "@/hooks/useCart";
@@ -75,6 +76,17 @@ export default function Index() {
 
       <CategoriesSection categories={categoriesQuery.data ?? []} />
 
+      <section className="container pb-10">
+        <Banner
+          title="Cloth Hanger"
+          subtitle="Explore our full range of premium hangers — wooden, velvet, plastic & more."
+          ctaText="Browse Hangers"
+          ctaLink="/products/hangers"
+          variant="primary"
+          align="center"
+        />
+      </section>
+
       <ProductSection
         title="Trending Now"
         subtitle="Most popular picks"
@@ -101,6 +113,7 @@ export default function Index() {
 
       <WhyChooseUsSection />
       <TestimonialsSection />
+      <BranchesSection />
       <NewsletterSection />
 
       <section className="container py-14 md:py-20">
