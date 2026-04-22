@@ -38,7 +38,11 @@ export default function CategoriesSection({ categories }: CategoriesSectionProps
               transition={{ delay: i * 0.05 }}
             >
               <Link
-                to={`/products?category=${cat.id}`}
+                to={
+                  cat.name?.toLowerCase().includes("hanger")
+                    ? "/products/hangers"
+                    : `/products?category=${cat.id}`
+                }
                 className="group flex flex-col items-center gap-3 p-6 rounded-2xl border bg-card hover:border-primary/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
