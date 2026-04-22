@@ -8,6 +8,7 @@ import CategoriesSection from "@/components/home/CategoriesSection";
 import ProductSection from "@/components/home/ProductSection";
 import WhyChooseUsSection from "@/components/home/WhyChooseUsSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
+import BranchesSection from "@/components/home/BranchesSection";
 import Banner from "@/components/Banner";
 import NewsletterSection from "@/components/NewsletterSection";
 import { useCart } from "@/hooks/useCart";
@@ -101,6 +102,7 @@ export default function Index() {
 
       <WhyChooseUsSection />
       <TestimonialsSection />
+      <BranchesSection />
       <NewsletterSection />
 
       <section className="container py-14 md:py-20">

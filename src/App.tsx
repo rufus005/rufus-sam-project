@@ -28,6 +28,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSubscribers from "./pages/admin/AdminSubscribers";
 import AdminLogin from "./pages/admin/AdminLogin";
 import Wishlist from "./pages/Wishlist";
+import Hangers from "./pages/Hangers";
+import HangerDetail from "./pages/HangerDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +50,8 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/products/hangers" element={<Hangers />} />
+            <Route path="/hangers/:slug" element={<HangerDetail />} />
             <Route path="/products/:slug" element={<ProductDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
