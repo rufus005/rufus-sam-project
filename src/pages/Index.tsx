@@ -76,6 +76,17 @@ export default function Index() {
 
       <CategoriesSection categories={categoriesQuery.data ?? []} />
 
+      <section className="container pb-10">
+        <Banner
+          title="Cloth Hanger"
+          subtitle="Explore our full range of premium hangers — wooden, velvet, plastic & more."
+          ctaText="Browse Hangers"
+          ctaLink="/products/hangers"
+          variant="primary"
+          align="center"
+        />
+      </section>
+
       <ProductSection
         title="Trending Now"
         subtitle="Most popular picks"
