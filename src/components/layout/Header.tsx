@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
-import { supabase } from "@/integrations/supabase/client";
+import { isAdminEmail } from "@/config/admins";
 
 /** Navigation links used in both desktop and mobile menus */
 const NAV_LINKS = [
@@ -33,14 +33,8 @@ export default function Header() {
   const location = useLocation();
   const { cartCount } = useCart();
   const { wishlistCount } = useWishlist();
-  const [isAdmin, setIsAdmin] = useState(false);
   const { theme, setTheme } = useTheme();
-
-  /** Check admin role when user changes */
-  useEffect(() => {
-    if (!user) { setIsAdmin(false); return; }
-    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
+  const isAdmin = isAdminEmail(user?.email);
 
   /** Navigate to products page with search query */
   const handleSearch = (e: React.FormEvent) => {
@@ -84,6 +78,9 @@ export default function Header() {
                   <Link to="/profile" className="px-3 py-2.5 rounded-lg text-base font-medium hover:bg-secondary transition-colors">Profile</Link>
                   <Link to="/orders" className="px-3 py-2.5 rounded-lg text-base font-medium hover:bg-secondary transition-colors">Orders</Link>
                   <Link to="/wishlist" className="px-3 py-2.5 rounded-lg text-base font-medium hover:bg-secondary transition-colors">Wishlist</Link>
+                  {isAdmin && (
+                    <Link to="/admin" className="px-3 py-2.5 rounded-lg text-base font-medium text-primary hover:bg-secondary transition-colors">Admin Dashboard</Link>
+                  )}
                 </>
               )}
             </nav>

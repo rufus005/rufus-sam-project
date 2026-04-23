@@ -4,6 +4,7 @@
  */
 export const adminEmails: string[] = [
   "rufus090420@gmail.com",
+  "dynamicuniversal08@gmail.com",
   "dynamicunuversal08@gmail.com",
 ].map((e) => e.trim().toLowerCase());
 
