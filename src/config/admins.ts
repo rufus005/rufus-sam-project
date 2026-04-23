@@ -5,9 +5,10 @@
 export const adminEmails: string[] = [
   "rufus090420@gmail.com",
   "dynamicunuversal08@gmail.com",
-];
+].map((e) => e.trim().toLowerCase());
 
 export const isAdminEmail = (email?: string | null): boolean => {
   if (!email) return false;
-  return adminEmails.includes(email.toLowerCase());
+  const normalized = email.trim().toLowerCase();
+  return adminEmails.includes(normalized);
 };

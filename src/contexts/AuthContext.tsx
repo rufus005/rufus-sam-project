@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdminEmail } from "@/config/admins";
 
 /** Auto sign-out after 30 minutes of user inactivity */
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
@@ -62,9 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up listener first (before getSession) to avoid race conditions
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setLoading(false);
+
+        if (event === "SIGNED_IN" && session?.user?.email) {
+          const email = session.user.email;
+          console.log("[Auth] SIGNED_IN email:", email, "isAdmin:", isAdminEmail(email));
+          if (isAdminEmail(email) && !window.location.pathname.startsWith("/admin")) {
+            window.location.replace("/admin");
+          }
+        }
       }
     );
 
