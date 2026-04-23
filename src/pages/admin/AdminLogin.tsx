@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Mail, Shield, CheckCircle, Clock } from "lucide-react";
+import { isAdminEmail } from "@/config/admins";
 
 const COOLDOWN_KEY = "admin_magic_link_cooldown";
 const COOLDOWN_SECONDS = 60;
@@ -23,9 +24,8 @@ export default function AdminLogin() {
   // Redirect if already logged in as admin
   useEffect(() => {
     if (authLoading || !user) return;
-    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => {
-      if (data) navigate("/admin", { replace: true });
-    });
+    if (isAdminEmail(user.email)) navigate("/admin", { replace: true });
+    else navigate("/", { replace: true });
   }, [user, authLoading, navigate]);
 
   // Restore cooldown from localStorage on mount
