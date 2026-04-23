@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Mail, Lock, User, ShoppingBag, Loader2 } from "lucide-react";
+import { isAdminEmail } from "@/config/admins";
+
+const routeForEmail = (email?: string | null) => (isAdminEmail(email) ? "/admin" : "/");
 
 /**
  * Unified auth screen: Google OAuth + email/password "Continue" flow.
@@ -23,7 +26,7 @@ export default function Auth() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
-    if (user) navigate("/", { replace: true });
+    if (user) navigate(routeForEmail(user.email), { replace: true });
   }, [user, navigate]);
 
   const handleGoogle = async () => {
@@ -55,7 +58,7 @@ export default function Auth() {
 
     if (!signInError) {
       toast.success("Welcome back!");
-      navigate("/", { replace: true });
+      navigate(routeForEmail(email.trim()), { replace: true });
       setLoading(false);
       return;
     }
@@ -99,7 +102,7 @@ export default function Auth() {
 
     if (signUpData.session) {
       toast.success("Account created!");
-      navigate("/", { replace: true });
+      navigate(routeForEmail(email.trim()), { replace: true });
     } else {
       toast.error(
         "Account created, but email confirmation is enabled. Disable 'Confirm email' in Supabase Auth settings for instant access."
