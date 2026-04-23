@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdminEmail } from "@/config/admins";
 
 /** Auto sign-out after 30 minutes of user inactivity */
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
