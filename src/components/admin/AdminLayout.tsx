@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { isAdminEmail } from "@/config/admins";
 import {
@@ -79,7 +79,6 @@ function SidebarContent({ pathname }: { pathname: string }) {
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const isAdmin = isAdminEmail(user?.email);
 
@@ -95,13 +94,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-    navigate("/admin/login");
-    return null;
+    return <Navigate to="/admin/login" replace />;
   }
 
   if (!isAdmin) {
-    navigate("/");
-    return null;
+    return <Navigate to="/" replace />;
   }
 
   return (
