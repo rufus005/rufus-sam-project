@@ -1,10 +1,10 @@
-import { ReactNode, useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ReactNode } from "react";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { isAdminEmail } from "@/config/admins";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Mail,
-  ArrowLeft, LogOut, Menu, ChevronLeft, ShoppingBag, Settings,
+  ArrowLeft, LogOut, Menu, ShoppingBag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -79,20 +79,10 @@ function SidebarContent({ pathname }: { pathname: string }) {
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const { user, loading, signOut } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const isAdmin = isAdminEmail(user?.email);
 
-  useEffect(() => {
-    if (loading) return;
-    if (!user) { navigate("/login"); return; }
-    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => {
-      if (!data) { navigate("/"); return; }
-      setIsAdmin(true);
-    });
-  }, [user, loading, navigate]);
-
-  if (loading || isAdmin === null) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-3">
@@ -101,6 +91,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   return (
