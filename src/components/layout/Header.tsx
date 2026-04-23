@@ -78,6 +78,9 @@ export default function Header() {
                   <Link to="/profile" className="px-3 py-2.5 rounded-lg text-base font-medium hover:bg-secondary transition-colors">Profile</Link>
                   <Link to="/orders" className="px-3 py-2.5 rounded-lg text-base font-medium hover:bg-secondary transition-colors">Orders</Link>
                   <Link to="/wishlist" className="px-3 py-2.5 rounded-lg text-base font-medium hover:bg-secondary transition-colors">Wishlist</Link>
+                  {isAdmin && (
+                    <Link to="/admin" className="px-3 py-2.5 rounded-lg text-base font-medium text-primary hover:bg-secondary transition-colors">Admin Dashboard</Link>
+                  )}
                 </>
               )}
             </nav>
