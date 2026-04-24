@@ -10,6 +10,12 @@ const corsHeaders = {
 const CASHFREE_BASE_URL = "https://api.cashfree.com/pg";
 const CASHFREE_API_VERSION = "2022-09-01";
 
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -19,10 +25,7 @@ Deno.serve(async (req) => {
     // ---- Auth: validate JWT using getClaims (compatible with ES256 signing keys) ----
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -32,24 +35,19 @@ Deno.serve(async (req) => {
 
     if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
       console.error("Missing Supabase env vars");
-      return new Response(JSON.stringify({ error: "Server config error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Server configuration error" }, 500);
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
+    const serviceSupabase = createClient(supabaseUrl, serviceRoleKey);
 
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) {
       console.error("Auth claims error:", claimsError);
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
     const userId = claimsData.claims.sub as string;
     const userEmail = (claimsData.claims.email as string) || "";
@@ -60,23 +58,13 @@ Deno.serve(async (req) => {
 
     if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
       console.error("Missing Cashfree credentials");
-      return new Response(
-        JSON.stringify({ error: "Payment gateway not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Payment gateway not configured" }, 500);
     }
 
     if (!CASHFREE_SECRET_KEY.startsWith("cfsk_ma_prod_")) {
       console.error("Cashfree secret is not a LIVE key");
-      return new Response(
-        JSON.stringify({ error: "Payment gateway misconfigured (not live)" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Payment gateway misconfigured" }, 500);
     }
-
-    console.log(
-      `[Cashfree LIVE] App ID prefix: ${CASHFREE_APP_ID.substring(0, 6)}... base=${CASHFREE_BASE_URL}`
-    );
 
     const body = await req.json();
     const { action } = body;
@@ -84,7 +72,6 @@ Deno.serve(async (req) => {
     // ---- Create payment order on Cashfree ----
     if (action === "create_order") {
       const {
-        amount,
         customerName,
         customerPhone,
         customerEmail,
@@ -93,11 +80,75 @@ Deno.serve(async (req) => {
         cartItems,
       } = body;
 
-      if (!amount || !customerName || !customerPhone || !customerEmail) {
-        return new Response(JSON.stringify({ error: "Missing required fields" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (!customerName || !customerPhone || !customerEmail) {
+        return jsonResponse({ error: "Missing required fields" }, 400);
+      }
+
+      if (!Array.isArray(cartItems) || cartItems.length === 0) {
+        return jsonResponse({ error: "Cart is empty" }, 400);
+      }
+
+      // ---- SERVER-SIDE PRICE COMPUTATION ----
+      // Never trust client-supplied amounts. Look up canonical product prices
+      // from the database and compute the total here.
+      const productIds = cartItems
+        .map((it: any) => it?.product_id)
+        .filter((id: unknown): id is string => typeof id === "string");
+
+      if (productIds.length !== cartItems.length) {
+        return jsonResponse({ error: "Invalid cart payload" }, 400);
+      }
+
+      const { data: dbProducts, error: prodErr } = await serviceSupabase
+        .from("products")
+        .select("id, price, name, image_url, is_active")
+        .in("id", productIds);
+
+      if (prodErr || !dbProducts) {
+        console.error("Failed to load products for price validation:", prodErr);
+        return jsonResponse({ error: "Unable to validate cart" }, 500);
+      }
+
+      const priceMap = new Map<string, { price: number; name: string; image: string | null; active: boolean }>(
+        dbProducts.map((p: any) => [
+          p.id,
+          { price: Number(p.price), name: p.name, image: p.image_url, active: p.is_active },
+        ])
+      );
+
+      let serverTotal = 0;
+      const safeOrderItems: Array<{
+        product_id: string;
+        product_name: string;
+        product_image: string | null;
+        price: number;
+        quantity: number;
+      }> = [];
+
+      for (const item of cartItems) {
+        const meta = priceMap.get(item.product_id);
+        if (!meta || !meta.active) {
+          return jsonResponse({ error: "Cart contains an unavailable product" }, 400);
+        }
+        const qty = Math.max(1, Math.floor(Number(item.quantity) || 0));
+        if (!qty || qty > 999) {
+          return jsonResponse({ error: "Invalid quantity in cart" }, 400);
+        }
+        serverTotal += meta.price * qty;
+        safeOrderItems.push({
+          product_id: item.product_id,
+          product_name: meta.name,
+          product_image: meta.image,
+          price: meta.price,
+          quantity: qty,
         });
+      }
+
+      // Round to 2 decimals (INR paisa precision)
+      serverTotal = Math.round(serverTotal * 100) / 100;
+
+      if (serverTotal <= 0) {
+        return jsonResponse({ error: "Invalid order total" }, 400);
       }
 
       // Normalize phone: Cashfree expects digits, optional +country code
@@ -107,7 +158,7 @@ Deno.serve(async (req) => {
 
       const cashfreePayload = {
         order_id: orderId,
-        order_amount: Number(amount),
+        order_amount: serverTotal,
         order_currency: "INR",
         customer_details: {
           customer_id: userId.substring(0, 25),
@@ -138,20 +189,21 @@ Deno.serve(async (req) => {
           status: cfResponse.status,
           body: cfData,
         });
-        return new Response(
-          JSON.stringify({ error: cfData.message || "Failed to create payment order" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        // Generic message — do not leak Cashfree internals to the client
+        return jsonResponse(
+          { error: "Payment could not be initiated. Please try again." },
+          400
         );
       }
 
       console.log("Cashfree order created:", orderId);
 
-      // Persist pending order
+      // Persist pending order with the SERVER-computed total
       const { data: dbOrder, error: dbError } = await supabase
         .from("orders")
         .insert({
           user_id: userId,
-          total: amount,
+          total: serverTotal,
           shipping_address: shippingAddress,
           status: "pending",
           payment_intent_id: orderId,
@@ -162,34 +214,22 @@ Deno.serve(async (req) => {
 
       if (dbError) {
         console.error("DB order insert error:", dbError);
-        return new Response(JSON.stringify({ error: "Failed to create order record" }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Failed to create order record" }, 500);
       }
 
-      if (cartItems && cartItems.length > 0) {
-        const orderItems = cartItems.map((item: any) => ({
-          order_id: dbOrder.id,
-          product_id: item.product_id,
-          product_name: item.product_name,
-          product_image: item.product_image,
-          price: item.price,
-          quantity: item.quantity,
-        }));
+      const orderItemsRows = safeOrderItems.map((it) => ({
+        order_id: dbOrder.id,
+        ...it,
+      }));
 
-        const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-        if (itemsError) console.error("DB order items error:", itemsError);
-      }
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItemsRows);
+      if (itemsError) console.error("DB order items error:", itemsError);
 
-      return new Response(
-        JSON.stringify({
-          payment_session_id: cfData.payment_session_id,
-          cashfree_order_id: orderId,
-          db_order_id: dbOrder.id,
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({
+        payment_session_id: cfData.payment_session_id,
+        cashfree_order_id: orderId,
+        db_order_id: dbOrder.id,
+      });
     }
 
     // ---- Verify payment status with Cashfree ----
@@ -197,10 +237,40 @@ Deno.serve(async (req) => {
       const { cashfreeOrderId, dbOrderId } = body;
 
       if (!cashfreeOrderId || !dbOrderId) {
-        return new Response(JSON.stringify({ error: "Missing order IDs" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return jsonResponse({ error: "Missing order IDs" }, 400);
+      }
+
+      // ---- OWNERSHIP CHECK: prevent IDOR ----
+      // Confirm the dbOrderId belongs to the authenticated user before any update.
+      const { data: ownerRow, error: ownerErr } = await serviceSupabase
+        .from("orders")
+        .select("user_id, payment_intent_id")
+        .eq("id", dbOrderId)
+        .maybeSingle();
+
+      if (ownerErr) {
+        console.error("Ownership lookup error:", ownerErr);
+        return jsonResponse({ error: "Unable to verify order" }, 500);
+      }
+
+      if (!ownerRow || ownerRow.user_id !== userId) {
+        console.warn("verify_payment ownership mismatch", {
+          userId,
+          dbOrderId,
+          actualOwner: ownerRow?.user_id,
         });
+        return jsonResponse({ error: "Forbidden" }, 403);
+      }
+
+      // Also ensure the Cashfree order id matches the one stored on this DB order,
+      // so a user cannot reuse an unrelated paid Cashfree order to confirm this one.
+      if (ownerRow.payment_intent_id && ownerRow.payment_intent_id !== cashfreeOrderId) {
+        console.warn("verify_payment cashfree id mismatch", {
+          dbOrderId,
+          stored: ownerRow.payment_intent_id,
+          provided: cashfreeOrderId,
+        });
+        return jsonResponse({ error: "Forbidden" }, 403);
       }
 
       const cfResponse = await fetch(`${CASHFREE_BASE_URL}/orders/${cashfreeOrderId}`, {
@@ -216,14 +286,10 @@ Deno.serve(async (req) => {
 
       if (!cfResponse.ok) {
         console.error("Cashfree verify error:", { status: cfResponse.status, body: cfData });
-        return new Response(JSON.stringify({ error: "Failed to verify payment" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Failed to verify payment" }, 400);
       }
 
       const paymentStatus = cfData.order_status;
-      const serviceSupabase = createClient(supabaseUrl, serviceRoleKey);
 
       if (paymentStatus === "PAID") {
         await serviceSupabase
@@ -231,10 +297,7 @@ Deno.serve(async (req) => {
           .update({ payment_status: "paid", status: "confirmed" })
           .eq("id", dbOrderId);
 
-        return new Response(
-          JSON.stringify({ status: "paid", order_id: dbOrderId }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return jsonResponse({ status: "paid", order_id: dbOrderId });
       } else {
         await serviceSupabase
           .from("orders")
@@ -244,22 +307,17 @@ Deno.serve(async (req) => {
           })
           .eq("id", dbOrderId);
 
-        return new Response(
-          JSON.stringify({ status: String(paymentStatus).toLowerCase(), order_id: dbOrderId }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return jsonResponse({
+          status: String(paymentStatus).toLowerCase(),
+          order_id: dbOrderId,
+        });
       }
     }
 
-    return new Response(JSON.stringify({ error: "Invalid action" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Invalid action" }, 400);
   } catch (err) {
+    // Log full detail server-side; return only a generic message to the client
     console.error("Edge function error:", err);
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "An internal error occurred" }, 500);
   }
 });
