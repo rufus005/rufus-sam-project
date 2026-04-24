@@ -23,6 +23,7 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [slideDir, setSlideDir] = useState(1);
 
   const productQuery = useQuery({
     queryKey: ["product", slug],
@@ -83,12 +84,18 @@ export default function ProductDetail() {
     : [];
 
   const goToImage = (dir: number) => {
+    setSlideDir(dir);
     setSelectedImage((prev) => {
       const next = prev + dir;
       if (next < 0) return allImages.length - 1;
       if (next >= allImages.length) return 0;
       return next;
     });
+  };
+
+  const selectImage = (i: number) => {
+    setSlideDir(i > selectedImage ? 1 : -1);
+    setSelectedImage(i);
   };
 
   if (productQuery.isLoading) {
@@ -178,32 +185,47 @@ export default function ProductDetail() {
           {/* Image Gallery */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
             {/* Main Image with Slider */}
-            <div className="relative aspect-square bg-muted rounded-2xl overflow-hidden group">
-              <AnimatePresence mode="wait">
+            <div className="relative aspect-square bg-muted rounded-2xl overflow-hidden group touch-pan-y select-none">
+              <AnimatePresence mode="wait" custom={slideDir}>
                 <motion.img
                   key={selectedImage}
                   src={allImages[selectedImage] || "/placeholder.svg"}
                   alt={product.name}
-                  className="w-full h-full object-cover"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  className="absolute inset-0 w-full h-full object-cover will-change-transform"
+                  custom={slideDir}
+                  variants={{
+                    enter: (d: number) => ({ x: d > 0 ? "100%" : "-100%", opacity: 0.6 }),
+                    center: { x: 0, opacity: 1 },
+                    exit: (d: number) => ({ x: d > 0 ? "-100%" : "100%", opacity: 0.6 }),
+                  }}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ x: { type: "spring", stiffness: 260, damping: 32 }, opacity: { duration: 0.2 } }}
+                  drag={allImages.length > 1 ? "x" : false}
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.2}
+                  onDragEnd={(_, info) => {
+                    if (info.offset.x < -60) goToImage(1);
+                    else if (info.offset.x > 60) goToImage(-1);
+                  }}
                 />
               </AnimatePresence>
 
-              {/* Navigation Arrows */}
+              {/* Navigation Arrows — always visible on mobile, hover on desktop */}
               {allImages.length > 1 && (
                 <>
                   <button
                     onClick={() => goToImage(-1)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card"
+                    aria-label="Previous image"
+                    className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 h-9 w-9 md:h-10 md:w-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center shadow-lg md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-card z-10"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
                   <button
                     onClick={() => goToImage(1)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card"
+                    aria-label="Next image"
+                    className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-9 w-9 md:h-10 md:w-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center shadow-lg md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-card z-10"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
@@ -212,13 +234,13 @@ export default function ProductDetail() {
 
               {/* Image counter */}
               {allImages.length > 1 && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-card/80 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium shadow-sm">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-card/80 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium shadow-sm z-10">
                   {selectedImage + 1} / {allImages.length}
                 </div>
               )}
 
               {discount > 0 && (
-                <Badge className="absolute top-4 left-4 bg-destructive text-destructive-foreground text-sm font-bold px-3 py-1">
+                <Badge className="absolute top-4 left-4 bg-destructive text-destructive-foreground text-sm font-bold px-3 py-1 z-10">
                   -{discount}% OFF
                 </Badge>
               )}
@@ -226,7 +248,8 @@ export default function ProductDetail() {
               {/* Wishlist */}
               <button
                 onClick={() => handleToggleWishlist(product.id)}
-                className="absolute top-4 right-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors shadow-md"
+                aria-label="Toggle wishlist"
+                className="absolute top-4 right-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors shadow-md z-10"
               >
                 <Heart className={`h-5 w-5 transition-colors ${isInWishlist(product.id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
               </button>
@@ -238,8 +261,8 @@ export default function ProductDetail() {
                 {allImages.map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setSelectedImage(i)}
-                    className={`h-20 w-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all duration-200 ${
+                    onClick={() => selectImage(i)}
+                    className={`h-16 w-16 md:h-20 md:w-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all duration-200 ${
                       selectedImage === i
                         ? "border-primary ring-2 ring-primary/20"
                         : "border-transparent hover:border-muted-foreground/30 opacity-70 hover:opacity-100"
