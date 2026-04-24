@@ -23,6 +23,7 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [slideDir, setSlideDir] = useState(1);
 
   const productQuery = useQuery({
     queryKey: ["product", slug],
