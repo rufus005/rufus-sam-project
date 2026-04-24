@@ -1,62 +1,92 @@
+## Restore Admin CRUD + Full Order Visibility
 
+### Root Cause (confirmed)
 
-## Unified Auth Flow — Single Screen
+Admin gating in the **UI** uses an email allow-list (`isAdminEmail`), but the **database** RLS policies use `has_role(auth.uid(), 'admin')` against the `user_roles` table.
 
-Replace the separate Login/Register pages with one frictionless "Continue" screen. Google OAuth on top, email/password below that auto-routes between sign-in and sign-up.
+I checked the database — both predefined admin users currently have `role = 'user'`, NOT `'admin'`:
 
-### What changes for the user
+```
+rufus090420@gmail.com         → user
+dynamicunuversal08@gmail.com  → user
+```
 
-- One page at `/login` (and `/register` redirects there) with:
-  - **Continue with Google** button (top)
-  - "or" divider
-  - **Name**, **Email**, **Password** fields
-  - **Continue** button
-- Click Continue → if account exists, signs in; if not, creates it and signs in immediately. No OTP, no email verification, no second screen.
-- Header "Sign In" / "Sign Up" links both point to the same screen.
+That's why:
 
-### Supabase config (user action required)
+- **Edit Save fails silently** → `UPDATE products` is blocked by RLS, returns 0 rows changed (no error toast because Supabase returns success with empty result for blocked updates).
+- **Create / Delete don't reflect** → same RLS block on `INSERT` / `DELETE`.
+- **Orders not visible in admin** → `Users view own orders` policy only shows the admin's own orders; the `Admins can manage orders` policy never matches because the user has no admin role.
+- **Order status changes don't persist** → blocked by RLS on `orders.UPDATE`.
 
-For instant access without email verification, **"Confirm email" must be turned OFF** in Supabase Auth settings. I'll surface a link after implementation. Google OAuth must also be enabled with a Client ID/Secret in the Supabase dashboard — I'll provide the exact redirect URL to paste into Google Cloud Console.
+The UI lets you click everything because the email check passes, but every write/read of other users' data is silently blocked by Postgres RLS.
 
-### Technical implementation
+### The Fix
 
-**New file: `src/pages/Auth.tsx`**
-- Single component replacing Login + Register UI.
-- State: `name`, `email`, `password`, `loading`.
-- `handleGoogle()`: `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })`.
-- `handleContinue()`:
-  1. Try `supabase.auth.signInWithPassword({ email, password })`.
-  2. If error message indicates invalid credentials / user not found → call `supabase.auth.signUp({ email, password, options: { data: { full_name: name }, emailRedirectTo: window.location.origin } })`.
-  3. If signup returns a session → navigate home. If signup succeeds but no session (email confirm still on) → show a clear error telling the user to disable email confirmation in Supabase.
-  4. Any other sign-in error (wrong password for existing account) → show "Incorrect password for this email."
-- Name field is only required when the flow falls through to signup; if empty at signup time, show "Please enter your name."
-- Loading spinner on the Continue button; toast for errors.
+Two parts, both small:
 
-**Routing — `src/App.tsx`**
-- Route `/login` → `Auth`.
-- Route `/register` → redirect to `/login` (so existing links keep working).
-- Remove `ForgotPassword` / `ResetPassword` from nav? **Keep them** as-is (still reachable via direct URL) — out of scope for this task.
+**1. Database — promote the admin emails to the `admin` role**
 
-**Header — `src/components/layout/Header.tsx`**
-- Collapse "Sign In" + "Sign Up" entries into a single "Sign In" link pointing to `/login`. (Both currently route separately; unify them.)
+Insert/upsert `admin` rows in `public.user_roles` for the two existing admin users. Also add a one-time helper so newly-signed-up admin emails are auto-promoted by the existing `handle_new_user` trigger.
 
-**Files removed from active use** (kept on disk, just unrouted):
-- `src/pages/Login.tsx`, `src/pages/Register.tsx` — no longer mounted. Safe to delete later; leaving them avoids touching unrelated imports.
+```sql
+-- Promote existing admin users
+INSERT INTO public.user_roles (user_id, role)
+SELECT u.id, 'admin'::app_role
+FROM auth.users u
+WHERE LOWER(u.email) IN (
+  'rufus090420@gmail.com',
+  'dynamicuniversal08@gmail.com',
+  'dynamicmarketing538@gmail.com'
+)
+ON CONFLICT (user_id, role) DO NOTHING;
 
-**AuthContext** — no changes. Existing `onAuthStateChange` listener already persists session and handles OAuth redirect callbacks automatically.
+-- Update handle_new_user trigger to auto-grant admin role on signup
+-- if email is in the predefined admin list
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name, avatar_url)
+  VALUES (NEW.id,
+          COALESCE(NEW.raw_user_meta_data->>'full_name',''),
+          COALESCE(NEW.raw_user_meta_data->>'avatar_url',''));
 
-**Profile auto-creation** — already handled by the existing `handle_new_user` trigger, which inserts into `profiles` and `user_roles` on signup. Google OAuth users get a profile too (full_name pulled from `raw_user_meta_data`). No DB changes needed.
+  INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'user');
 
-### Edge cases handled
+  IF LOWER(NEW.email) IN (
+    'rufus090420@gmail.com',
+    'dynamicuniversal08@gmail.com',
+    'dynamicunuversal08@gmail.com'
+  ) THEN
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (NEW.id, 'admin')
+    ON CONFLICT (user_id, role) DO NOTHING;
+  END IF;
 
-- Existing user, correct password → signs in.
-- Existing user, wrong password → "Incorrect password for this email."
-- New email → auto signs up + signs in.
-- Email confirmation still enabled in Supabase → signup returns no session; show actionable error pointing to the setting.
-- Google OAuth → full redirect flow; AuthContext picks up the session on return.
+  RETURN NEW;
+END; $$;
+```
 
-### Post-implementation steps for you
+**2. Frontend — refetch after every mutation (already mostly there, one gap)**
 
-1. **Supabase Dashboard → Authentication → Providers → Email**: turn **"Confirm email" OFF**.
-2. **Authentication → Providers → Google**: enable, paste Client ID + Secret from Google Cloud Console (I'll share the redirect URL to authorize).
+`AdminProducts` already invalidates `["admin-products"]` after save/delete — good. `AdminOrders` invalidates `["admin-orders"]` and `["admin-stats"]` — good. No code changes needed there once RLS allows the writes through.
 
+One small UX hardening: surface RLS-style silent failures by checking the affected row count in `AdminProducts` save mutation, so if RLS ever blocks again the admin sees a clear error instead of a fake "Updated" toast.
+
+### Files touched
+
+- **Migration** (new): grant admin role + update `handle_new_user`
+- `src/pages/admin/AdminProducts.tsx`: tiny tweak to detect "0 rows updated" and throw, so silent RLS failures show an error toast
+
+### What you'll see after
+
+- Edit a product → Save → toast "Product updated" → row updates immediately in the table
+- Create / Delete works the same
+- Admin Orders page lists **all** customer orders (not just yours)
+- Status changes persist; stock auto-adjusts
+- New orders placed by any customer appear instantly on next refetch (already invalidated on relevant actions)
+
+### Out of scope
+
+- No auth flow changes
+- No new tables or RLS policy rewrites — existing policies are correct, they just need the role row to exist
+- No realtime subscriptions (refetch on mutation success is sufficient and matches existing pattern)
