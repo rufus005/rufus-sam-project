@@ -83,8 +83,11 @@ export default function AdminProducts() {
       let productId = editId;
 
       if (editId) {
-        const { error } = await supabase.from("products").update(payload).eq("id", editId);
+        const { data, error } = await supabase.from("products").update(payload).eq("id", editId).select();
         if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error("Update was blocked. You may not have admin permissions for this record.");
+        }
       } else {
         const { data, error } = await supabase.from("products").insert(payload).select().single();
         if (error) throw error;
