@@ -113,24 +113,24 @@ export default function HeroBanner() {
       <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-accent/5 blur-3xl" />
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
-      {/* Navigation arrows */}
+      {/* Navigation arrows — hidden on small screens to avoid overlap */}
       <button
         onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-card/60 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors shadow-md"
+        className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-card/60 backdrop-blur-sm items-center justify-center hover:bg-card transition-colors shadow-md"
         aria-label="Previous slide"
       >
         <ChevronLeft className="h-5 w-5 text-foreground" />
       </button>
       <button
         onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-card/60 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors shadow-md"
+        className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-card/60 backdrop-blur-sm items-center justify-center hover:bg-card transition-colors shadow-md"
         aria-label="Next slide"
       >
         <ChevronRight className="h-5 w-5 text-foreground" />
       </button>
 
       {/* Slide content */}
-      <div className="container relative z-10 py-16 md:py-28 lg:py-36">
+      <div className="container relative z-10 py-14 pb-20 md:py-28 lg:py-36">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={current}
