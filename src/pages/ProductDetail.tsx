@@ -84,12 +84,18 @@ export default function ProductDetail() {
     : [];
 
   const goToImage = (dir: number) => {
+    setSlideDir(dir);
     setSelectedImage((prev) => {
       const next = prev + dir;
       if (next < 0) return allImages.length - 1;
       if (next >= allImages.length) return 0;
       return next;
     });
+  };
+
+  const selectImage = (i: number) => {
+    setSlideDir(i > selectedImage ? 1 : -1);
+    setSelectedImage(i);
   };
 
   if (productQuery.isLoading) {
