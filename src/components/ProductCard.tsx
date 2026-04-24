@@ -84,11 +84,11 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
             {product.name}
           </h3>
         </Link>
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-baseline gap-2">
-            <span className="font-bold text-lg">{formatPrice(product.price)}</span>
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 min-w-0">
+            <span className="font-bold text-base sm:text-lg whitespace-nowrap">{formatPrice(product.price)}</span>
             {product.compare_at_price && (
-              <span className="text-xs text-muted-foreground line-through">
+              <span className="text-xs text-muted-foreground line-through whitespace-nowrap">
                 {formatPrice(product.compare_at_price)}
               </span>
             )}
@@ -97,7 +97,7 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
             <Button
               size="icon"
               variant="outline"
-              className="h-9 w-9 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+              className="h-9 w-9 shrink-0 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
