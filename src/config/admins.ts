@@ -6,6 +6,9 @@ export const adminEmails: string[] = [
   "rufus090420@gmail.com",
   "dynamicuniversal08@gmail.com",
   "dynamicunuversal08@gmail.com",
+  "marketingdynamic81@gmail.com",
+  "dynamicmarketing538@gmail.com",
+  "rufus090400@gmail.com",
 ].map((e) => e.trim().toLowerCase());
 
 export const isAdminEmail = (email?: string | null): boolean => {
