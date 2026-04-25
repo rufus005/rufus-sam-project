@@ -1,17 +1,24 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { isAdminEmail } from "@/config/admins";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 /**
- * Admin route guard. Access allowed only when the logged-in user's email
- * matches the predefined admin list (case-insensitive). Everyone else is
- * redirected to the home page.
+ * Admin route guard.
+ *
+ * Access is granted ONLY when the database confirms the user has the
+ * `admin` role in `public.user_roles`. The check runs server-side via
+ * Supabase (RLS-protected), so users cannot bypass it by tampering with
+ * client state, localStorage, or the email allow-list.
+ *
+ * Non-admins are redirected to the home page; unauthenticated users are
+ * sent to the admin login.
  */
 export function AdminRoute({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useIsAdmin();
 
-  if (loading) {
+  if (authLoading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -23,7 +30,7 @@ export function AdminRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  if (!isAdminEmail(user.email)) {
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 
