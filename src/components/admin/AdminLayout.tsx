@@ -78,9 +78,10 @@ function SidebarContent({ pathname }: { pathname: string }) {
 }
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { isAdmin, loading: roleLoading } = useIsAdmin();
   const location = useLocation();
-  const isAdmin = isAdminEmail(user?.email);
+  const loading = authLoading || roleLoading;
 
   if (loading) {
     return (
