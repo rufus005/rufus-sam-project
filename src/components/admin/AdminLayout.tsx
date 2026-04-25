@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { isAdminEmail } from "@/config/admins";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Mail,
   ArrowLeft, LogOut, Menu, ShoppingBag,
