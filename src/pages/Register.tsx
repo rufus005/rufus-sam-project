@@ -115,7 +115,7 @@ export default function Register() {
         toast.error("Invalid or expired OTP. Please try again.");
         setOtp("");
       } else {
-        toast.success("Email verified! Welcome to Rufus Sam!");
+        toast.success("Email verified! Welcome to Dynamic Universal Marketing!");
         navigate("/");
       }
     } catch {
@@ -195,7 +195,7 @@ export default function Register() {
             <ShoppingBag className="h-7 w-7 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Join Rufus Sam and start shopping</CardDescription>
+          <CardDescription>Join Dynamic Universal Marketing and start shopping</CardDescription>
         </CardHeader>
         <form onSubmit={handleRegister}>
           <CardContent className="space-y-4">

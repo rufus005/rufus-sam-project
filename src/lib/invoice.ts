@@ -30,7 +30,7 @@ interface OrderData {
   notes?: string | null;
 }
 
-const STORE_NAME = "Rufus Sam";
+const STORE_NAME = "Dynamic Universal Marketing";
 const STORE_TAGLINE = "Quality products, delivered with care";
 
 function formatStatus(s: string) {

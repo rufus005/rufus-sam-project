@@ -28,7 +28,7 @@ function SidebarContent({ pathname }: { pathname: string }) {
             <ShoppingBag className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <span className="font-heading font-bold text-base">Rufus Sam</span>
+            <span className="font-heading font-bold text-base">Dynamic Universal Marketing</span>
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Admin Panel</p>
           </div>
         </Link>
