@@ -54,7 +54,7 @@ export default function Footer() {
         <div className="border-t mt-10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <span>&copy; {new Date().getFullYear()} Dynamic Universal Marketing. All rights reserved.</span>
           <div className="flex items-center gap-4">
-            <span className="text-xs">Powered by Razorpay</span>
+            <span className="text-xs">Powered by Ismail</span>
           </div>
         </div>
       </div>
