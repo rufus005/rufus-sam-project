@@ -14,44 +14,43 @@ import {
 import { Separator } from "@/components/ui/separator";
 import {
   Mail, Phone, MapPin, Clock, Send, MessageSquare,
-  HelpCircle, Instagram, Facebook, Twitter,
+  HelpCircle, Instagram, Youtube,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const faqs = [
   {
-    q: "How can I track my order?",
-    a: "Once your order is shipped, you'll receive an email with tracking details. You can also check order status from your account under 'My Orders'.",
+    q: "How can I check product availability?",
+    a: "You can contact our team directly or visit your nearest branch to check available stock. Our branch staff will assist you with real-time availability.",
   },
   {
-    q: "What is your return policy?",
-    a: "We accept returns within 7 days of delivery. Items must be unused and in original packaging. Contact support to initiate a return.",
+    q: "What products do you offer?",
+    a: "We specialize in high-quality shoe storage racks including double decker models and multiple rack variants such as 5 rack (30 pairs), 4 rack (24 pairs), 3 rack (18 pairs), and 2 rack (12 pairs).",
   },
   {
-    q: "What payment methods do you accept?",
-    a: "We accept all major credit/debit cards, UPI, net banking via Razorpay, and Cash on Delivery (COD).",
+    q: "Do you provide delivery and installation?",
+    a: "Yes, we provide free delivery and installation across Karnataka. For Tamil Nadu and Hyderabad, delivery is available with transport charges.",
   },
   {
-    q: "How long does shipping take?",
-    a: "Standard shipping takes 3-5 business days across India. Express shipping (1-2 days) is available in select cities.",
+    q: "How long does delivery take?",
+    a: "Delivery within Karnataka usually takes 1–2 days. For other locations like Tamil Nadu and Hyderabad, delivery time may vary.",
   },
   {
-    q: "How do I cancel or modify my order?",
-    a: "You can contact our support within 2 hours of placing your order to cancel or modify it. After that, the order enters processing and cannot be changed.",
+    q: "How can I place or modify an order?",
+    a: "You can contact our branch directly for placing or modifying orders.",
   },
 ];
 
 const contactInfo = [
-  { icon: Mail, label: "Email", value: "support@rufussam.com", href: "mailto:support@rufussam.com" },
-  { icon: Phone, label: "Phone", value: "+91 123 456 7890", href: "tel:+911234567890" },
-  { icon: MapPin, label: "Address", value: "123 Commerce Street, Mumbai, Maharashtra 400001, India" },
-  { icon: Clock, label: "Working Hours", value: "Mon – Sat: 9:00 AM – 7:00 PM IST" },
+  { icon: Mail, label: "Email", value: "admin@dynamicuniversalmarketing.in", href: "mailto:admin@dynamicuniversalmarketing.in" },
+  { icon: Phone, label: "Phone", value: "+91 7899779304", href: "tel:+917899779304" },
+  { icon: MapPin, label: "Address", value: "12, 50th Main Rd, Doddakallasandra, Konanakunte, Bengaluru, Karnataka 560062, India" },
+  { icon: Clock, label: "Working Hours", value: "Mon – Sun: 9:00 AM – 8:00 PM IST" },
 ];
 
 const socials = [
-  { icon: Instagram, label: "Instagram", href: "https://instagram.com" },
-  { icon: Facebook, label: "Facebook", href: "https://facebook.com" },
-  { icon: Twitter, label: "Twitter", href: "https://twitter.com" },
+  { icon: Instagram, label: "Instagram", href: "https://www.instagram.com/dynamicshoerack/" },
+  { icon: Youtube, label: "YouTube", href: "https://www.youtube.com/@Dynamicuniversalmarketing786" },
 ];
 
 export default function Contact() {
@@ -184,7 +183,7 @@ export default function Contact() {
                   </a>
                 ))}
                 <a
-                  href="https://wa.me/911234567890"
+                  href="https://wa.me/917899779304"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="h-11 w-11 rounded-xl bg-green-500/10 flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors"
@@ -198,7 +197,7 @@ export default function Contact() {
             {/* Mini Map */}
             <div className="rounded-2xl border bg-card overflow-hidden shadow-sm">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3773.931!2d72.8311!3d18.9322!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTjCsDU1JzU2LjAiTiA3MsKwNDknNTIuMCJF!5e0!3m2!1sen!2sin!4v1600000000000!5m2!1sen!2sin"
+                src="https://www.google.com/maps?q=12,+50th+Main+Rd,+Doddakallasandra,+Konanakunte,+Bengaluru,+Karnataka+560062&output=embed"
                 width="100%"
                 height="200"
                 style={{ border: 0 }}
