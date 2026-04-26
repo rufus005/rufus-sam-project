@@ -9,19 +9,19 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 font-heading font-bold text-lg mb-4">
               <ShoppingBag className="h-5 w-5 text-primary" />
-              Rufus Sam
+              Dynamic Universal Marketing
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              Your one-stop shop for quality products at great prices. Fast delivery, secure payments.
+              Premium shoe storage solutions — durable, high-capacity racks for every home, shop and showroom.
             </p>
             <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5" />
-                <span>support@rufussam.com</span>
+                <span>admin@dynamicuniversalmarketing.in</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5" />
-                <span>+91 123 456 7890</span>
+                <span>+91 7899779304</span>
               </div>
             </div>
           </div>
@@ -52,7 +52,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t mt-10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <span>&copy; {new Date().getFullYear()} Rufus Sam. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} Dynamic Universal Marketing. All rights reserved.</span>
           <div className="flex items-center gap-4">
             <span className="text-xs">Powered by Razorpay</span>
           </div>
