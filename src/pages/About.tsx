@@ -12,49 +12,49 @@ const brandSections = [
   {
     title: "Our Story",
     description:
-      "Founded with a passion for quality and value, Rufus Sam started as a small vision to make premium products accessible to everyone. Today we serve thousands of happy customers worldwide.",
+      "Founded by Ismail, Dynamic Universal Marketing was built around a simple idea: practical, space-saving storage solutions every household and shop can rely on.",
     icon: <BookOpen className="h-6 w-6 text-primary" />,
   },
   {
     title: "Our Mission",
     description:
-      "To provide customers with a seamless shopping experience, offering carefully curated products backed by exceptional customer service and fast, reliable delivery.",
+      "Deliver durable, high-capacity shoe racks with excellent service and value — keeping your space organised and your shoes protected.",
     icon: <Target className="h-6 w-6 text-primary" />,
   },
   {
     title: "Our Vision",
     description:
-      "To become the most trusted online marketplace where quality meets affordability, building lasting relationships with every customer we serve.",
+      "To become a trusted storage solution brand across India, known for quality craftsmanship and dependable customer service.",
     icon: <Eye className="h-6 w-6 text-primary" />,
   },
 ];
 
 const features = [
-  { icon: Truck, title: "Fast Delivery", description: "Free shipping on orders over $50 with 2-5 day delivery across the country." },
+  { icon: Truck, title: "Fast Delivery", description: "Same-day delivery in Bangalore on single product orders. Free delivery & installation across Karnataka." },
+  { icon: Award, title: "Quality Products", description: "Durable, high-capacity shoe racks built to last for years of daily use." },
   { icon: Shield, title: "Secure Payment", description: "Your transactions are protected with industry-leading SSL encryption." },
-  { icon: Award, title: "Quality Products", description: "Every product is vetted for quality before it reaches our shelves." },
   { icon: Headphones, title: "24/7 Support", description: "Our dedicated team is always available to help with any questions." },
 ];
 
 const stats = [
   { icon: Users, value: 15000, label: "Happy Customers" },
   { icon: Package, value: 2500, label: "Total Products" },
-  { icon: Building2, value: 120, label: "Trusted Brands" },
+  { icon: Building2, value: 4, label: "Branches" },
   { icon: Star, value: 4800, suffix: "+", label: "5-Star Ratings" },
 ];
 
 const testimonials = [
-  { name: "Sarah Johnson", role: "Verified Buyer", content: "Amazing quality and super fast delivery! I've been shopping here for months and every order has exceeded my expectations.", rating: 5 },
-  { name: "Michael Chen", role: "Regular Customer", content: "The customer support team is incredibly helpful. They resolved my issue within minutes. Highly recommended!", rating: 5 },
-  { name: "Emily Davis", role: "First-time Buyer", content: "Great selection of products at competitive prices. The website is easy to navigate and checkout was smooth.", rating: 4 },
-  { name: "David Wilson", role: "Loyal Customer", content: "I love the quality of products here. Returns are hassle-free and the team genuinely cares about customer satisfaction.", rating: 5 },
+  { name: "Ravi Kumar", role: "Verified Buyer", content: "Bought the double decker 30-pair rack for my showroom. Sturdy build, neat finish, and the team installed it the same day. Excellent service!", rating: 5 },
+  { name: "Priya Naidu", role: "Home Customer", content: "The 4 rack model fits perfectly in our entryway. Free delivery and installation in Bangalore was a huge plus.", rating: 5 },
+  { name: "Mohammed Anwar", role: "Shop Owner", content: "Quality is genuinely premium. Holds heavy footwear without bending. Highly recommended for retail use.", rating: 5 },
+  { name: "Lakshmi S.", role: "Repeat Customer", content: "Second purchase from Dynamic Universal Marketing. Reliable products and the team is very responsive on WhatsApp.", rating: 4 },
 ];
 
 const team = [
-  { name: "Alex Morgan", role: "Founder & CEO", bio: "Passionate entrepreneur with 10+ years in e-commerce, dedicated to making quality products accessible to all." },
-  { name: "Priya Sharma", role: "Head of Operations", bio: "Operations expert ensuring every order is processed, packed, and shipped with care and efficiency." },
-  { name: "James Lee", role: "Lead Developer", bio: "Tech enthusiast building seamless shopping experiences with cutting-edge web technologies." },
-  { name: "Sophie Carter", role: "Customer Success", bio: "Customer-first advocate making sure every interaction leaves a positive and lasting impression." },
+  { name: "Ismail", role: "Founder & CEO", bio: "Founder of Dynamic Universal Marketing, driven by a vision to bring practical, durable storage solutions to every home and shop." },
+  { name: "Operations Lead", role: "Head of Operations", bio: "Ensures every order is processed, packed, delivered and installed with care and on time." },
+  { name: "Sardik", role: "Lead Developer", bio: "Builds and maintains our digital experience so customers can browse and connect with us seamlessly." },
+  { name: "Nandhini", role: "Customer Success", bio: "Customer-first advocate making sure every interaction leaves a positive and lasting impression." },
 ];
 
 export default function About() {
@@ -62,8 +62,8 @@ export default function About() {
     <Layout>
       <PageHero
         badge="About Us"
-        title="The Story Behind Rufus Sam"
-        subtitle="We're on a mission to make online shopping simple, reliable, and enjoyable for everyone."
+        title="The Story Behind Dynamic Universal Marketing"
+        subtitle="We're on a mission to provide smart, space-saving shoe storage solutions that are reliable, durable, and accessible for every home, shop, and showroom."
       />
 
       {/* Brand Story */}

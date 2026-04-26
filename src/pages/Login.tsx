@@ -124,7 +124,7 @@ export default function Login() {
             <ShoppingBag className="h-7 w-7 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your Rufus Sam account</CardDescription>
+          <CardDescription>Sign in to your Dynamic Universal Marketing account</CardDescription>
         </CardHeader>
 
         <Tabs value={tab} onValueChange={(v) => { setTab(v); setOtpSent(false); setOtp(""); }} className="w-full">

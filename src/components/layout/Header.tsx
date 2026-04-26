@@ -58,7 +58,7 @@ export default function Header() {
             <SheetTitle className="sr-only">Navigation menu</SheetTitle>
             <div className="flex items-center gap-2 font-heading font-bold text-lg mb-8 mt-4">
               <ShoppingBag className="h-5 w-5 text-primary" />
-              Rufus Sam
+              Dynamic Universal Marketing
             </div>
             <nav className="flex flex-col gap-1">
               {NAV_LINKS.map((link) => (
@@ -90,7 +90,7 @@ export default function Header() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-heading font-bold text-xl shrink-0">
           <ShoppingBag className="h-6 w-6 text-primary" />
-          <span className="hidden sm:inline">Rufus Sam</span>
+          <span className="hidden sm:inline">Dynamic Universal Marketing</span>
         </Link>
 
         {/* Desktop nav */}

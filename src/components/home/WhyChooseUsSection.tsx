@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import FeatureCard from "@/components/shared/FeatureCard";
-import { Truck, Shield, RotateCcw, Headphones } from "lucide-react";
+import { Truck, Shield, Award, Headphones } from "lucide-react";
 
 const features = [
-  { icon: Truck, title: "Fast Delivery", description: "Free shipping on orders over $50 with 2-5 day delivery nationwide." },
+  { icon: Truck, title: "Fast Delivery", description: "Same-day delivery in Bangalore on single product orders. Free delivery & installation across Karnataka." },
+  { icon: Award, title: "Quality Products", description: "Durable, high-capacity shoe storage racks built to last for years of daily use." },
   { icon: Shield, title: "Secure Payment", description: "Your transactions are protected with industry-leading SSL encryption." },
-  { icon: RotateCcw, title: "Easy Returns", description: "Hassle-free 30-day return policy on all products, no questions asked." },
   { icon: Headphones, title: "24/7 Support", description: "Our dedicated team is always available to help with any questions." },
 ];
 
