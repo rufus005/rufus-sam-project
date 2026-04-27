@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import heroImg1 from "@/assets/hero-shoe-rack.jpg";
-import heroImg2 from "@/assets/hero-shoe-rack-2.jpg";
-import heroImg3 from "@/assets/hero-shoe-rack-3.jpg";
+import heroImg1 from "@/assets/hero-shoe-rack.webp";
+import heroImg2 from "@/assets/hero-shoe-rack-2.webp";
+import heroImg3 from "@/assets/hero-shoe-rack-3.webp";
 
 interface Slide {
   badge: string;
@@ -74,6 +74,14 @@ export default function HeroBanner() {
     const t = setInterval(next, INTERVAL);
     return () => clearInterval(t);
   }, [next]);
+
+  // Preload all hero images on mount so slide transitions are instant (no flicker)
+  useEffect(() => {
+    slides.forEach((s) => {
+      const img = new Image();
+      img.src = s.image;
+    });
+  }, []);
 
   const slide = slides[current];
 
@@ -178,8 +186,24 @@ export default function HeroBanner() {
                     width={896}
                     height={1024}
                     className="w-full h-auto object-contain aspect-[4/5] rounded-xl"
+                    loading="eager"
+                    decoding="async"
                     fetchPriority="high"
                   />
+                  {/* Hidden preload for the remaining slides — keeps them warm in cache */}
+                  <div aria-hidden className="hidden">
+                    {slides
+                      .filter((s) => s.image !== slide.image)
+                      .map((s) => (
+                        <img
+                          key={s.image}
+                          src={s.image}
+                          alt=""
+                          loading="eager"
+                          decoding="async"
+                        />
+                      ))}
+                  </div>
                 </div>
               </div>
             </div>
