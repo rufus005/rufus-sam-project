@@ -147,7 +147,7 @@ export default function Contact() {
             {/* Info Cards */}
             <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-5">
               <h3 className="font-bold text-lg">Contact Information</h3>
-              <div className="space-y-4">
+              <div className="space-y-4 text-center">
                 {contactInfo.map(({ icon: Icon, label, value, href }) => (
                   <div key={label} className="flex gap-3">
                     <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
