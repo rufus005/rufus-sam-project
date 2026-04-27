@@ -145,20 +145,25 @@ export default function Contact() {
             className="lg:col-span-2 space-y-6"
           >
             {/* Info Cards */}
-            <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-5">
-              <h3 className="font-bold text-lg">Contact Information</h3>
-              <div className="space-y-4 text-center">
+            <div className="rounded-2xl border bg-card p-5 sm:p-6 shadow-sm space-y-5">
+              <h3 className="font-bold text-lg text-center sm:text-left">Contact Information</h3>
+              <div className="space-y-4">
                 {contactInfo.map(({ icon: Icon, label, value, href }) => (
-                  <div key={label} className="flex gap-3">
+                  <div key={label} className="flex items-start gap-3">
                     <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                       <Icon className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{label}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-0.5">{label}</p>
                       {href ? (
-                        <a href={href} className="text-sm font-medium hover:text-primary transition-colors">{value}</a>
+                        <a
+                          href={href}
+                          className="text-sm font-medium hover:text-primary transition-colors break-words"
+                        >
+                          {value}
+                        </a>
                       ) : (
-                        <p className="text-sm font-medium">{value}</p>
+                        <p className="text-sm font-medium leading-relaxed break-words">{value}</p>
                       )}
                     </div>
                   </div>
