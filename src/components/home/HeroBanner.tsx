@@ -24,16 +24,16 @@ const slides: Slide[] = [
     subtitle:
       "We provide high-quality shoe racks designed for durability and maximum capacity.",
     image: heroImg1,
-    imageAlt: "Premium 5-tier double decker shoe rack with 30 pair capacity",
+    imageAlt: "Premium 5-tier shoe shelter rack with 30 pair capacity",
   },
   {
     badge: "BESTSELLER — DOUBLE DECKER",
     headline: "Double Decker",
-    highlight: "30 Pair Capacity",
+    highlight: "12 Pair Capacity",
     subtitle:
-      "Sturdy build, smart design, and easy assembly. Perfect for families and showrooms.",
+      "Sturdy build, smart design, and easy assembly. Perfect for compact homes.",
     image: heroImg2,
-    imageAlt: "Double decker shoe rack holding up to 30 pairs of shoes",
+    imageAlt: "2-tier double decker shoe rack with open shelves",
   },
   {
     badge: "MULTIPLE VARIANTS AVAILABLE",
@@ -42,7 +42,7 @@ const slides: Slide[] = [
     subtitle:
       "Choose from 5 rack (30 pairs), 4 rack (24 pairs), 3 rack (18 pairs) and 2 rack (12 pairs).",
     image: heroImg3,
-    imageAlt: "Compact 3-tier shoe rack with multiple shoes",
+    imageAlt: "3-tier shoe shelter rack with stylish front panel",
   },
 ];
 
