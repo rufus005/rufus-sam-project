@@ -186,8 +186,24 @@ export default function HeroBanner() {
                     width={896}
                     height={1024}
                     className="w-full h-auto object-contain aspect-[4/5] rounded-xl"
+                    loading="eager"
+                    decoding="async"
                     fetchPriority="high"
                   />
+                  {/* Hidden preload for the remaining slides — keeps them warm in cache */}
+                  <div aria-hidden className="hidden">
+                    {slides
+                      .filter((s) => s.image !== slide.image)
+                      .map((s) => (
+                        <img
+                          key={s.image}
+                          src={s.image}
+                          alt=""
+                          loading="eager"
+                          decoding="async"
+                        />
+                      ))}
+                  </div>
                 </div>
               </div>
             </div>
