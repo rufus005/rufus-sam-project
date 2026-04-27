@@ -33,7 +33,7 @@ export default function Auth() {
     setGoogleLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: "https://dynamic-n.vercel.app/" },
     });
     if (error) {
       toast.error(error.message);
