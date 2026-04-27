@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import heroImg1 from "@/assets/hero-shoe-rack.jpg";
-import heroImg2 from "@/assets/hero-shoe-rack-2.jpg";
-import heroImg3 from "@/assets/hero-shoe-rack-3.jpg";
+import heroImg1 from "@/assets/hero-shoe-rack.webp";
+import heroImg2 from "@/assets/hero-shoe-rack-2.webp";
+import heroImg3 from "@/assets/hero-shoe-rack-3.webp";
 
 interface Slide {
   badge: string;
