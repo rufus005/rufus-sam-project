@@ -75,6 +75,14 @@ export default function HeroBanner() {
     return () => clearInterval(t);
   }, [next]);
 
+  // Preload all hero images on mount so slide transitions are instant (no flicker)
+  useEffect(() => {
+    slides.forEach((s) => {
+      const img = new Image();
+      img.src = s.image;
+    });
+  }, []);
+
   const slide = slides[current];
 
   const variants = {
