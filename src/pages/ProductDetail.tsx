@@ -311,17 +311,7 @@ export default function ProductDetail() {
                 </span>
               </div>
 
-              <div className="flex gap-3">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="flex-1 h-12"
-                  disabled={product.stock_quantity === 0}
-                  onClick={handleAddToCart}
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Add to Cart
-                </Button>
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   size="lg"
                   className="flex-1 h-12"
@@ -331,16 +321,16 @@ export default function ProductDetail() {
                   <Zap className="h-4 w-4 mr-2" />
                   {product.stock_quantity === 0 ? "Out of Stock" : "Buy Now"}
                 </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="flex-1 h-12"
+                  onClick={handleCallNow}
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Call Now
+                </Button>
               </div>
-
-              <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => handleToggleWishlist(product.id)}
-              >
-                <Heart className={`h-4 w-4 mr-2 ${isInWishlist(product.id) ? "fill-destructive text-destructive" : ""}`} />
-                {isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
-              </Button>
             </div>
 
             <Separator className="my-6" />
