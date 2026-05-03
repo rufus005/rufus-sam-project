@@ -25,6 +25,10 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [slideDir, setSlideDir] = useState(1);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [slug]);
+
   const productQuery = useQuery({
     queryKey: ["product", slug],
     queryFn: async () => {
