@@ -7,19 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Minus, Plus, Star, Zap, Truck, Shield, RotateCcw, Heart, ChevronLeft, ChevronRight } from "lucide-react";
-import { useCart } from "@/hooks/useCart";
-import { useWishlist } from "@/hooks/useWishlist";
+import { Minus, Plus, Star, Zap, Phone, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
-import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import ProductGrid from "@/components/ProductGrid";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const { user } = useAuth();
-  const { addToCart } = useCart();
-  const { toggleWishlist, isInWishlist } = useWishlist();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
