@@ -126,65 +126,6 @@ export default function Header() {
             <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
           </Button>
 
-          {/* Wishlist */}
-          <Button variant="ghost" size="icon" asChild className="relative hidden sm:flex h-9 w-9">
-            <Link to="/wishlist">
-              <Heart className="h-5 w-5" />
-              {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
-                  {wishlistCount}
-                </span>
-              )}
-            </Link>
-          </Button>
-
-          {/* Cart */}
-          <Button variant="ghost" size="icon" asChild className="relative h-9 w-9">
-            <Link to="/cart">
-              <ShoppingCart className="h-5 w-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-          </Button>
-
-          {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full h-9 w-9">
-                  <User className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">{user.email}</div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/profile">Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/orders">Orders</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/wishlist">Wishlist</Link>
-                </DropdownMenuItem>
-                {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin">Admin Dashboard</Link>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut} className="text-destructive">
-                  <LogOut className="h-4 w-4 mr-2" /> Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button size="sm" asChild className="ml-1">
-              <Link to="/login">Sign in</Link>
-            </Button>
-          )}
         </div>
       </div>
     </header>
