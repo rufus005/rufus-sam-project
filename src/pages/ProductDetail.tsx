@@ -7,19 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, Minus, Plus, Star, Zap, Truck, Shield, RotateCcw, Heart, ChevronLeft, ChevronRight } from "lucide-react";
-import { useCart } from "@/hooks/useCart";
-import { useWishlist } from "@/hooks/useWishlist";
+import { Minus, Plus, Star, Zap, Phone, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
-import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import ProductGrid from "@/components/ProductGrid";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const { user } = useAuth();
-  const { addToCart } = useCart();
-  const { toggleWishlist, isInWishlist } = useWishlist();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -147,26 +141,15 @@ export default function ProductDetail() {
     );
   }
 
-  const handleAddToCart = () => {
-    if (!user) { navigate("/login"); return; }
-    addToCart.mutate({ productId: product.id, quantity: qty });
-  };
-
   const handleBuyNow = () => {
     const phone = "917090157740";
-    const message = `Hi, I'm interested in this product: ${product.name}`;
+    const message = `Hi, I want to buy: ${product.name}, Quantity: ${qty}, Price: ${formatPrice(Number(product.price) * qty)}`;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const handleRelatedAddToCart = (productId: string) => {
-    if (!user) { navigate("/login"); return; }
-    addToCart.mutate({ productId });
-  };
-
-  const handleToggleWishlist = (productId: string) => {
-    if (!user) { navigate("/login"); return; }
-    toggleWishlist.mutate(productId);
+  const handleCallNow = () => {
+    window.location.href = "tel:+917090157740";
   };
 
   return (
@@ -249,14 +232,6 @@ export default function ProductDetail() {
                 </Badge>
               )}
 
-              {/* Wishlist */}
-              <button
-                onClick={() => handleToggleWishlist(product.id)}
-                aria-label="Toggle wishlist"
-                className="absolute top-4 right-4 h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors shadow-md z-10"
-              >
-                <Heart className={`h-5 w-5 transition-colors ${isInWishlist(product.id) ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
-              </button>
             </div>
 
             {/* Thumbnails */}
@@ -336,17 +311,7 @@ export default function ProductDetail() {
                 </span>
               </div>
 
-              <div className="flex gap-3">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="flex-1 h-12"
-                  disabled={product.stock_quantity === 0}
-                  onClick={handleAddToCart}
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Add to Cart
-                </Button>
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   size="lg"
                   className="flex-1 h-12"
@@ -356,16 +321,16 @@ export default function ProductDetail() {
                   <Zap className="h-4 w-4 mr-2" />
                   {product.stock_quantity === 0 ? "Out of Stock" : "Buy Now"}
                 </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="flex-1 h-12"
+                  onClick={handleCallNow}
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Call Now
+                </Button>
               </div>
-
-              <Button
-                variant="ghost"
-                className="w-full"
-                onClick={() => handleToggleWishlist(product.id)}
-              >
-                <Heart className={`h-4 w-4 mr-2 ${isInWishlist(product.id) ? "fill-destructive text-destructive" : ""}`} />
-                {isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
-              </Button>
             </div>
 
             <Separator className="my-6" />
@@ -416,9 +381,6 @@ export default function ProductDetail() {
             <ProductGrid
               products={(relatedQuery.data as any[]) ?? []}
               isLoading={relatedQuery.isLoading}
-              onAddToCart={handleRelatedAddToCart}
-              onToggleWishlist={handleToggleWishlist}
-              isWishlisted={isInWishlist}
               columns={4}
             />
           </div>

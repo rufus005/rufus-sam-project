@@ -44,10 +44,10 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Auth />} />
-            <Route path="/register" element={<Navigate to="/login" replace />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="/register" element={<Navigate to="/" replace />} />
+            <Route path="/forgot-password" element={<Navigate to="/" replace />} />
+            <Route path="/reset-password" element={<Navigate to="/" replace />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/hangers" element={<Hangers />} />
             <Route path="/hangers/:slug" element={<HangerDetail />} />

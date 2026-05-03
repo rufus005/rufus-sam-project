@@ -13,68 +13,35 @@ export interface Hanger {
  */
 export const hangers: Hanger[] = [
   {
-    slug: "wooden-hanger",
-    name: "Wooden Hanger",
-    shortDescription: "Premium polished wood, ideal for suits & coats.",
+    slug: "ceiling-hanger",
+    name: "Ceiling Hanger",
+    shortDescription: "Space-saving ceiling-mounted cloth hanger.",
     description:
-      "Crafted from solid hardwood with a smooth polished finish, our wooden hangers offer strength and elegance. Perfect for suits, blazers, and heavy coats — keeping their shape for years.",
+      "Heavy-duty ceiling-mounted hanger ideal for drying clothes indoors. Strong frame with smooth pulley operation — perfect for balconies and utility areas.",
     image:
       "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=900&q=80",
     whatsapp: "917090157740",
     mapsUrl: "https://maps.app.goo.gl/xaph3UaM3bFc8ySy6",
   },
   {
-    slug: "plastic-hanger",
-    name: "Plastic Hanger",
-    shortDescription: "Lightweight, durable, and budget-friendly.",
+    slug: "wall-mount-hanger",
+    name: "Wall Mount Hanger",
+    shortDescription: "Sturdy wall-mounted hanger for everyday use.",
     description:
-      "High-grade ABS plastic hangers built for everyday use. Lightweight, moisture-resistant, and available in multiple colors — perfect for shirts, tops, and casual wear.",
+      "Compact wall-mounted cloth hanger built with rust-resistant steel. Easy to install and folds flat against the wall when not in use.",
     image:
       "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?auto=format&fit=crop&w=900&q=80",
     whatsapp: "917090157740",
     mapsUrl: "https://maps.app.goo.gl/xaph3UaM3bFc8ySy6",
   },
   {
-    slug: "velvet-hanger",
-    name: "Velvet Hanger",
-    shortDescription: "Non-slip velvet finish for delicate clothing.",
+    slug: "wall-mount-zigzag-hanger",
+    name: "Wall Mount Zigzag Hanger",
+    shortDescription: "Expandable zigzag hanger — extra hanging space.",
     description:
-      "Soft velvet-coated hangers with a slim profile that saves wardrobe space. The non-slip surface keeps silk, satin, and knitwear securely in place.",
+      "Innovative zigzag-style wall mount hanger that expands to provide multiple hanging points. Great for small homes and balcony drying setups.",
     image:
       "https://images.unsplash.com/photo-1567113463300-102a7eb3cb26?auto=format&fit=crop&w=900&q=80",
-    whatsapp: "917090157740",
-    mapsUrl: "https://maps.app.goo.gl/xaph3UaM3bFc8ySy6",
-  },
-  {
-    slug: "metal-hanger",
-    name: "Metal Hanger",
-    shortDescription: "Heavy-duty steel hangers for long-term use.",
-    description:
-      "Chrome-finished steel hangers built to hold the heaviest garments. Rust-resistant and ideal for retail displays, laundries, and home wardrobes.",
-    image:
-      "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&w=900&q=80",
-    whatsapp: "917090157740",
-    mapsUrl: "https://maps.app.goo.gl/xaph3UaM3bFc8ySy6",
-  },
-  {
-    slug: "kids-hanger",
-    name: "Kids Hanger",
-    shortDescription: "Small-size hangers designed for children's wear.",
-    description:
-      "Compact, colorful, and safe — designed specifically for kids' clothing. Smooth edges and lightweight build make them easy for children to use too.",
-    image:
-      "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80",
-    whatsapp: "917090157740",
-    mapsUrl: "https://maps.app.goo.gl/xaph3UaM3bFc8ySy6",
-  },
-  {
-    slug: "multi-tier-hanger",
-    name: "Multi-Tier Hanger",
-    shortDescription: "Saves space — holds up to 5 garments at once.",
-    description:
-      "A smart space-saving hanger with multiple tiers. Great for organizing pants, scarves, or shirts in compact wardrobes without compromising visibility.",
-    image:
-      "https://images.unsplash.com/photo-1558769132-92e6c11671b8?auto=format&fit=crop&w=900&q=80",
     whatsapp: "917090157740",
     mapsUrl: "https://maps.app.goo.gl/xaph3UaM3bFc8ySy6",
   },
