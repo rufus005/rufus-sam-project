@@ -153,10 +153,10 @@ export default function ProductDetail() {
   };
 
   const handleBuyNow = () => {
-    if (!user) { navigate("/login"); return; }
-    addToCart.mutate({ productId: product.id, quantity: qty }, {
-      onSuccess: () => navigate("/checkout"),
-    });
+    const phone = "917090157740";
+    const message = `Hi, I'm interested in this product: ${product.name}`;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const handleRelatedAddToCart = (productId: string) => {
