@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,10 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [slideDir, setSlideDir] = useState(1);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [slug]);
 
   const productQuery = useQuery({
     queryKey: ["product", slug],
@@ -149,10 +153,10 @@ export default function ProductDetail() {
   };
 
   const handleBuyNow = () => {
-    if (!user) { navigate("/login"); return; }
-    addToCart.mutate({ productId: product.id, quantity: qty }, {
-      onSuccess: () => navigate("/checkout"),
-    });
+    const phone = "917090157740";
+    const message = `Hi, I'm interested in this product: ${product.name}`;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const handleRelatedAddToCart = (productId: string) => {
