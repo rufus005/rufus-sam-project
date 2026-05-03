@@ -381,9 +381,6 @@ export default function ProductDetail() {
             <ProductGrid
               products={(relatedQuery.data as any[]) ?? []}
               isLoading={relatedQuery.isLoading}
-              onAddToCart={handleRelatedAddToCart}
-              onToggleWishlist={handleToggleWishlist}
-              isWishlisted={isInWishlist}
               columns={4}
             />
           </div>
