@@ -1,22 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, User, Search, Menu, ShoppingBag, LogOut, Heart, Sun, Moon } from "lucide-react";
+import { Search, Menu, ShoppingBag, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
-import { useCart } from "@/hooks/useCart";
-import { useWishlist } from "@/hooks/useWishlist";
-import { isAdminEmail } from "@/config/admins";
 
 /** Navigation links used in both desktop and mobile menus */
 const NAV_LINKS = [
@@ -27,14 +16,10 @@ const NAV_LINKS = [
 ] as const;
 
 export default function Header() {
-  const { user, signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const { cartCount } = useCart();
-  const { wishlistCount } = useWishlist();
   const { theme, setTheme } = useTheme();
-  const isAdmin = isAdminEmail(user?.email);
 
   /** Navigate to products page with search query */
   const handleSearch = (e: React.FormEvent) => {
