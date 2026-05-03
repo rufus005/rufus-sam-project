@@ -141,26 +141,15 @@ export default function ProductDetail() {
     );
   }
 
-  const handleAddToCart = () => {
-    if (!user) { navigate("/login"); return; }
-    addToCart.mutate({ productId: product.id, quantity: qty });
-  };
-
   const handleBuyNow = () => {
     const phone = "917090157740";
-    const message = `Hi, I'm interested in this product: ${product.name}`;
+    const message = `Hi, I want to buy: ${product.name}, Quantity: ${qty}, Price: ${formatPrice(Number(product.price) * qty)}`;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const handleRelatedAddToCart = (productId: string) => {
-    if (!user) { navigate("/login"); return; }
-    addToCart.mutate({ productId });
-  };
-
-  const handleToggleWishlist = (productId: string) => {
-    if (!user) { navigate("/login"); return; }
-    toggleWishlist.mutate(productId);
+  const handleCallNow = () => {
+    window.location.href = "tel:+917090157740";
   };
 
   return (
