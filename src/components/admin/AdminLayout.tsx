@@ -78,28 +78,31 @@ function SidebarContent({ pathname, onLogout }: { pathname: string; onLogout: ()
 }
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { user, signOut } = useAuth();
-  const { isAdmin } = useIsAdmin();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { isAdmin, loading: roleLoading } = useIsAdmin();
   const location = useLocation();
-  const staticAuthed = isStaticAdminAuthed();
 
-  // Allow either: (a) static admin session, or (b) Supabase admin user.
-  const allowed = staticAuthed || (!!user && isAdmin);
+  // Wait for auth + role check before deciding.
+  if (authLoading || roleLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
+        Loading admin...
+      </div>
+    );
+  }
 
-  if (!allowed) {
+  // Require a real Supabase session with admin role so RLS writes succeed.
+  if (!user || !isAdmin) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  const handleLogout = () => {
-    if (staticAuthed) {
-      sessionStorage.removeItem(ADMIN_SESSION_KEY);
-      window.location.href = "/admin/login";
-      return;
-    }
-    signOut();
+  const handleLogout = async () => {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    await signOut();
+    window.location.href = "/admin/login";
   };
 
-  const displayEmail = staticAuthed ? ADMIN_EMAIL : user?.email;
+  const displayEmail = user?.email ?? ADMIN_EMAIL;
 
   return (
     <div className="flex min-h-screen bg-background">
