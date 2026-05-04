@@ -78,35 +78,34 @@ function SidebarContent({ pathname, onLogout }: { pathname: string; onLogout: ()
 }
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading, signOut } = useAuth();
-  const { isAdmin, loading: roleLoading } = useIsAdmin();
+  const { user, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const location = useLocation();
-  const loading = authLoading || roleLoading;
+  const staticAuthed = isStaticAdminAuthed();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading admin panel...</p>
-        </div>
-      </div>
-    );
-  }
+  // Allow either: (a) static admin session, or (b) Supabase admin user.
+  const allowed = staticAuthed || (!!user && isAdmin);
 
-  if (!user) {
+  if (!allowed) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
-  }
+  const handleLogout = () => {
+    if (staticAuthed) {
+      sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      window.location.href = "/admin/login";
+      return;
+    }
+    signOut();
+  };
+
+  const displayEmail = staticAuthed ? ADMIN_EMAIL : user?.email;
 
   return (
     <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar */}
       <aside className="w-64 border-r bg-card hidden lg:flex flex-col shrink-0 sticky top-0 h-screen">
-        <SidebarContent pathname={location.pathname} />
+        <SidebarContent pathname={location.pathname} onLogout={handleLogout} />
       </aside>
 
       {/* Main */}
@@ -122,7 +121,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0 flex flex-col h-full">
               <SheetTitle className="sr-only">Admin Navigation</SheetTitle>
-              <SidebarContent pathname={location.pathname} />
+              <SidebarContent pathname={location.pathname} onLogout={handleLogout} />
             </SheetContent>
           </Sheet>
 
@@ -133,7 +132,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground hidden sm:inline">{user?.email}</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">{displayEmail}</span>
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
               <Users className="h-4 w-4 text-primary" />
             </div>
@@ -141,7 +140,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               variant="ghost"
               size="icon"
               className="lg:hidden shrink-0 text-destructive hover:bg-destructive/10"
-              onClick={signOut}
+              onClick={handleLogout}
               title="Logout"
             >
               <LogOut className="h-4.5 w-4.5" />
