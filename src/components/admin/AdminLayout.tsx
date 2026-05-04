@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { isStaticAdminAuthed, ADMIN_EMAIL, ADMIN_SESSION_KEY } from "@/config/staticAdmin";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Mail,
   ArrowLeft, LogOut, Menu, ShoppingBag,
