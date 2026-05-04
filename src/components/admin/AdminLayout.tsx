@@ -19,7 +19,6 @@ const navItems = [
 ];
 
 function SidebarContent({ pathname, onLogout }: { pathname: string; onLogout: () => void }) {
-  const { signOut } = useAuth();
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
@@ -67,7 +66,7 @@ function SidebarContent({ pathname, onLogout }: { pathname: string; onLogout: ()
           Back to Store
         </Link>
         <button
-          onClick={signOut}
+          onClick={onLogout}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full"
         >
           <LogOut className="h-4 w-4" />
