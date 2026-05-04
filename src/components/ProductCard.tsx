@@ -33,10 +33,15 @@ export default function ProductCard({ product, onAddToCart, onToggleWishlist, is
         <div className="aspect-[4/5] bg-muted flex items-center justify-center overflow-hidden">
           {product.image_url ? (
             <img
-              src={product.image_url}
+              src={transformProductImage(product.image_url, { width: 600, quality: 85 })}
+              srcSet={productImageSrcSet(product.image_url, 600, { quality: 85 })}
+              sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
               alt={product.name}
+              width={600}
+              height={750}
               className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
               loading="lazy"
+              decoding="async"
             />
           ) : (
             <div className="text-muted-foreground text-sm">No image</div>
