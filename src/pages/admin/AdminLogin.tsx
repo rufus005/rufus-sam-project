@@ -7,30 +7,80 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "sonner";
 import { Mail, Lock, Shield } from "lucide-react";
 import { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_SESSION_KEY } from "@/config/staticAdmin";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { isAdminEmail } from "@/config/admins";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (sessionStorage.getItem(ADMIN_SESSION_KEY) === "true") {
+    if (user && isAdminEmail(user.email)) {
       navigate("/admin", { replace: true });
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (email.trim().toLowerCase() === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+
+    const trimmedEmail = email.trim().toLowerCase();
+
+    // Hard-gate: only the configured admin email/password is accepted.
+    if (trimmedEmail !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+      toast.error("Invalid credentials");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Try to sign in with Supabase auth so RLS sees a real auth.uid().
+      let { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      });
+
+      // If account doesn't exist yet, create it. The handle_new_user trigger
+      // will auto-grant the 'admin' role because this email is allowlisted.
+      if (error && /invalid login credentials/i.test(error.message)) {
+        const signUp = await supabase.auth.signUp({
+          email: trimmedEmail,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/admin`,
+          },
+        });
+        error = signUp.error ?? null;
+
+        // If signup succeeded but no session (email confirmation enabled), retry sign in.
+        if (!error && !signUp.data.session) {
+          const retry = await supabase.auth.signInWithPassword({
+            email: trimmedEmail,
+            password,
+          });
+          error = retry.error ?? null;
+        }
+      }
+
+      if (error) {
+        toast.error(error.message || "Sign in failed");
+        setLoading(false);
+        return;
+      }
+
+      // Keep legacy session flag for any code still reading it.
       sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
       toast.success("Welcome, Admin!");
       navigate("/admin", { replace: true });
-    } else {
-      toast.error("Invalid credentials");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Sign in failed");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
