@@ -4,6 +4,7 @@ import { formatPrice } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Heart, Eye } from "lucide-react";
+import { transformProductImage, productImageSrcSet } from "@/lib/image";
 
 interface ProductCardProps {
   product: {
