@@ -18,7 +18,7 @@ const navItems = [
   { label: "Subscribers", href: "/admin/subscribers", icon: Mail },
 ];
 
-function SidebarContent({ pathname }: { pathname: string }) {
+function SidebarContent({ pathname, onLogout }: { pathname: string; onLogout: () => void }) {
   const { signOut } = useAuth();
   return (
     <div className="flex flex-col h-full">
