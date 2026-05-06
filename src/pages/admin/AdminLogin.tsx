@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Mail, Lock, Shield } from "lucide-react";
-import { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_SESSION_KEY } from "@/config/staticAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { isAdminEmail } from "@/config/admins";
@@ -30,50 +29,25 @@ export default function AdminLogin() {
 
     const trimmedEmail = email.trim().toLowerCase();
 
-    // Hard-gate: only the configured admin email/password is accepted.
-    if (trimmedEmail !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+    // Whitelist check first — only approved admin emails are allowed.
+    if (!isAdminEmail(trimmedEmail)) {
       toast.error("Invalid credentials");
       setLoading(false);
       return;
     }
 
     try {
-      // Try to sign in with Supabase auth so RLS sees a real auth.uid().
-      let { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
         password,
       });
 
-      // If account doesn't exist yet, create it. The handle_new_user trigger
-      // will auto-grant the 'admin' role because this email is allowlisted.
-      if (error && /invalid login credentials/i.test(error.message)) {
-        const signUp = await supabase.auth.signUp({
-          email: trimmedEmail,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/admin`,
-          },
-        });
-        error = signUp.error ?? null;
-
-        // If signup succeeded but no session (email confirmation enabled), retry sign in.
-        if (!error && !signUp.data.session) {
-          const retry = await supabase.auth.signInWithPassword({
-            email: trimmedEmail,
-            password,
-          });
-          error = retry.error ?? null;
-        }
-      }
-
       if (error) {
-        toast.error(error.message || "Sign in failed");
+        toast.error("Invalid credentials");
         setLoading(false);
         return;
       }
 
-      // Keep legacy session flag for any code still reading it.
-      sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
       toast.success("Welcome, Admin!");
       navigate("/admin", { replace: true });
     } catch (err: any) {
