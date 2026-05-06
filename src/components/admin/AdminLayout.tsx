@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { isStaticAdminAuthed, ADMIN_EMAIL, ADMIN_SESSION_KEY } from "@/config/staticAdmin";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Mail,
   ArrowLeft, LogOut, Menu, ShoppingBag,
@@ -97,12 +96,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   const handleLogout = async () => {
-    sessionStorage.removeItem(ADMIN_SESSION_KEY);
     await signOut();
     window.location.href = "/admin/login";
   };
 
-  const displayEmail = user?.email ?? ADMIN_EMAIL;
+  const displayEmail = user?.email ?? "";
 
   return (
     <div className="flex min-h-screen bg-background">
