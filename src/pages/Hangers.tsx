@@ -9,6 +9,12 @@ import PageHero from "@/components/shared/PageHero";
 export default function Hangers() {
   return (
     <Layout>
+      <SEO
+        title="Cloth Hangers Online India | Premium Wardrobe Hangers"
+        description="Shop premium cloth hangers online in India — wooden, plastic and metal hanger collections for modern wardrobes. Durable build and affordable pricing."
+        keywords="cloth hangers online, wooden hangers, wardrobe hangers India, premium hangers"
+        canonical="/products/hangers"
+      />
       <PageHero
         title="Cloth Hangers"
         subtitle="Browse our complete range of premium hangers"

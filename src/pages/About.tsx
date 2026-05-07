@@ -61,6 +61,12 @@ const team = [
 export default function About() {
   return (
     <Layout>
+      <SEO
+        title="About Dynamic Universal Marketing | Premium Shoe Rack Brand India"
+        description="Learn about Dynamic Universal Marketing — a trusted Indian brand offering premium, durable and affordable shoe storage racks for modern homes and businesses."
+        keywords="about dynamic universal marketing, shoe rack brand India, premium shoe storage company"
+        canonical="/about"
+      />
       <PageHero
         badge="About Us"
         title="The Story Behind Dynamic Universal Marketing"
