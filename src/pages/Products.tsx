@@ -89,7 +89,19 @@ export default function Products() {
               className="pl-9 bg-background"
             />
           </div>
-          <Select value={category} onValueChange={setCategory}>
+          <Select
+            value={category}
+            onValueChange={(value) => {
+              if (value !== "all") {
+                const selected = categoriesQuery.data?.find((c) => c.id === value);
+                if (selected?.name?.toLowerCase().includes("hanger")) {
+                  navigate("/products/hangers");
+                  return;
+                }
+              }
+              setCategory(value);
+            }}
+          >
             <SelectTrigger className="w-full sm:w-48 bg-background">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
