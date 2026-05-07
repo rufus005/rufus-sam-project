@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import { hangers } from "@/data/hangers";
 import { motion } from "framer-motion";

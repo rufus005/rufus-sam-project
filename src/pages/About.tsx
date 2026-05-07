@@ -1,4 +1,5 @@
 import Layout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
 import PageHero from "@/components/shared/PageHero";
 import AboutSections from "@/components/shared/AboutSections";
 import FeatureCard from "@/components/shared/FeatureCard";

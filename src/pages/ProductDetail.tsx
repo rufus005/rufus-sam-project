@@ -283,7 +283,7 @@ export default function ProductDetail() {
                         : "border-transparent hover:border-muted-foreground/30 opacity-70 hover:opacity-100"
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img} alt={`${product.name} – view ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
