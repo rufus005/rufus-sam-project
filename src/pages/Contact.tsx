@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Layout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,6 +69,12 @@ export default function Contact() {
 
   return (
     <Layout>
+      <SEO
+        title="Contact Dynamic Universal Marketing | Shoe Rack Enquiry India"
+        description="Get in touch with Dynamic Universal Marketing for shoe rack enquiries, bulk orders, delivery and installation across Karnataka, Tamil Nadu and Hyderabad."
+        keywords="shoe rack contact, buy shoe rack Bangalore, shoe rack dealer India"
+        canonical="/contact"
+      />
       {/* Hero */}
       <section className="bg-gradient-to-br from-primary/5 via-background to-accent/5 border-b">
         <div className="container max-w-6xl py-14 md:py-20 text-center">
