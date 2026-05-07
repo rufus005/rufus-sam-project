@@ -63,6 +63,12 @@ export default function Products() {
 
   return (
     <Layout>
+      <SEO
+        title={search ? `${search} – Shoe Racks Online | Dynamic Universal Marketing` : "Shop Shoe Racks Online India | Wooden, Metal & Multi-Layer"}
+        description="Browse our full collection of shoe storage racks — wooden, metal, multi-layer and modern designs. Affordable pricing, premium quality, fast delivery across India."
+        keywords="shoe rack online, wooden shoe rack, metal shoe rack, multi layer shoe rack, shoe storage rack, home shoe organizer, modern shoe rack for home, affordable shoe rack"
+        canonical="/products"
+      />
       <div className="container py-8 md:py-12">
         {/* Header */}
         <div className="mb-8">
