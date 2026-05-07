@@ -242,6 +242,7 @@ export type Database = {
           images: string[] | null
           is_active: boolean
           name: string
+          position: number
           price: number
           slug: string
           specifications: Json | null
@@ -259,6 +260,7 @@ export type Database = {
           images?: string[] | null
           is_active?: boolean
           name: string
+          position?: number
           price: number
           slug: string
           specifications?: Json | null
@@ -276,6 +278,7 @@ export type Database = {
           images?: string[] | null
           is_active?: boolean
           name?: string
+          position?: number
           price?: number
           slug?: string
           specifications?: Json | null
