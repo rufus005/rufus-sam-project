@@ -256,12 +256,12 @@ export default function AdminProducts() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Price *</Label>
-                  <Input type="number" step="0.01" value={form.price} onChange={set("price")} required />
+                  <Label>Price</Label>
+                  <Input type="text" value={form.price} onChange={set("price")} />
                 </div>
                 <div>
                   <Label>Compare at Price</Label>
-                  <Input type="number" step="0.01" value={form.compare_at_price} onChange={set("compare_at_price")} />
+                  <Input type="text" value={form.compare_at_price} onChange={set("compare_at_price")} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
