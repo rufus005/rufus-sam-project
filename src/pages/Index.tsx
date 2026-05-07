@@ -28,6 +28,7 @@ export default function Index() {
         .from("products")
         .select("*, categories(name, slug)")
         .eq("is_active", true)
+        .order("position", { ascending: true })
         .order("created_at", { ascending: false })
         .limit(8);
       if (error) throw error;

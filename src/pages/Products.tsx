@@ -43,7 +43,7 @@ export default function Products() {
       if (category && category !== "all") q = q.eq("category_id", category);
       if (sort === "price-asc") q = q.order("price", { ascending: true });
       else if (sort === "price-desc") q = q.order("price", { ascending: false });
-      else q = q.order("created_at", { ascending: false });
+      else q = q.order("position", { ascending: true }).order("created_at", { ascending: false });
       const { data, error } = await q;
       if (error) throw error;
       return data;
