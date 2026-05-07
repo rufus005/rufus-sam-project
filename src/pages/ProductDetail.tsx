@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -152,8 +153,43 @@ export default function ProductDetail() {
     window.location.href = "tel:+917090157740";
   };
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description || `${product.name} — premium shoe rack from Dynamic Universal Marketing.`,
+    image: allImages.length ? allImages : undefined,
+    sku: product.id,
+    brand: { "@type": "Brand", name: "Dynamic Universal Marketing" },
+    offers: {
+      "@type": "Offer",
+      price: Number(product.price) || 0,
+      priceCurrency: "INR",
+      availability: product.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      url: typeof window !== "undefined" ? window.location.href : undefined,
+    },
+    ...(reviewsQuery.data && reviewsQuery.data.length > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: avgRating.toFixed(1),
+            reviewCount: reviewsQuery.data.length,
+          },
+        }
+      : {}),
+  };
+
   return (
     <Layout>
+      <SEO
+        title={`${product.name} | Buy Online – Dynamic Universal Marketing`}
+        description={(product.description || `Buy ${product.name} online in India. Premium shoe storage rack with durable build, modern design and affordable pricing.`).slice(0, 160)}
+        keywords={`${product.name}, shoe rack online, ${(product as any).categories?.name || "shoe storage rack"}, buy shoe rack India`}
+        canonical={`/products/${product.slug}`}
+        image={allImages[0]}
+        type="product"
+        jsonLd={productJsonLd}
+      />
       <div className="container py-6 md:py-10">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
