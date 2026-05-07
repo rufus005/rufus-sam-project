@@ -361,6 +361,7 @@ export default function AdminProducts() {
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/30">
+              <TableHead className="w-10"></TableHead>
               <TableHead>Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
@@ -371,65 +372,97 @@ export default function AdminProducts() {
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {productsQuery.data?.map((product) => {
-              const imgCount = 1 + (product.images?.length ?? 0);
-              return (
-                <TableRow key={product.id} className="hover:bg-secondary/20">
-                  <TableCell>
-                    <div className="h-10 w-10 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                      {product.image_url ? (
-                        <img src={product.image_url} alt="" className="object-cover h-full w-full" />
-                      ) : (
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{(product as any).categories?.name ?? "—"}</TableCell>
-                  <TableCell>{formatPrice(product.price)}</TableCell>
-                  <TableCell>{product.stock_quantity}</TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                      <ImageIcon className="h-3 w-3" />
-                      {product.image_url ? imgCount : 0}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={product.is_active ? "default" : "secondary"}>
-                      {product.is_active ? "Active" : "Draft"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(product)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete product?</AlertDialogTitle>
-                            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteMutation.mutate(product.id)}>Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={orderedProducts.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+              <TableBody>
+                {orderedProducts.map((product) => (
+                  <SortableProductRow
+                    key={product.id}
+                    product={product}
+                    onEdit={() => openEdit(product)}
+                    onDelete={() => deleteMutation.mutate(product.id)}
+                  />
+                ))}
+              </TableBody>
+            </SortableContext>
+          </DndContext>
         </Table>
       </div>
     </AdminLayout>
+  );
+}
+
+function SortableProductRow({ product, onEdit, onDelete }: { product: any; onEdit: () => void; onDelete: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: product.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    boxShadow: isDragging ? "0 8px 24px hsl(var(--foreground) / 0.15)" : undefined,
+    background: isDragging ? "hsl(var(--card))" : undefined,
+  } as React.CSSProperties;
+  const imgCount = 1 + (product.images?.length ?? 0);
+  return (
+    <TableRow ref={setNodeRef} style={style} className="hover:bg-secondary/20">
+      <TableCell>
+        <button
+          type="button"
+          className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none"
+          {...attributes}
+          {...listeners}
+          aria-label="Drag to reorder"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </TableCell>
+      <TableCell>
+        <div className="h-10 w-10 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+          {product.image_url ? (
+            <img src={product.image_url} alt="" className="object-cover h-full w-full" />
+          ) : (
+            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="font-medium">{product.name}</TableCell>
+      <TableCell>{product.categories?.name ?? "—"}</TableCell>
+      <TableCell>{formatPrice(product.price)}</TableCell>
+      <TableCell>{product.stock_quantity}</TableCell>
+      <TableCell>
+        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+          <ImageIcon className="h-3 w-3" />
+          {product.image_url ? imgCount : 0}
+        </span>
+      </TableCell>
+      <TableCell>
+        <Badge variant={product.is_active ? "default" : "secondary"}>
+          {product.is_active ? "Active" : "Draft"}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete product?</AlertDialogTitle>
+                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }
