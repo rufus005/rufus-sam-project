@@ -112,8 +112,8 @@ export default function AdminProducts() {
         name: form.name,
         slug,
         description: form.description || null,
-        price: parseFloat(form.price),
-        compare_at_price: form.compare_at_price ? parseFloat(form.compare_at_price) : null,
+        price: (() => { const n = parseFloat(form.price); return isNaN(n) ? 0 : n; })(),
+        compare_at_price: (() => { const n = parseFloat(form.compare_at_price); return isNaN(n) ? null : n; })(),
         category_id: form.category_id || null,
         stock_quantity: parseInt(form.stock_quantity) || 0,
         is_active: form.is_active,
@@ -256,12 +256,12 @@ export default function AdminProducts() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Price *</Label>
-                  <Input type="number" step="0.01" value={form.price} onChange={set("price")} required />
+                  <Label>Price</Label>
+                  <Input type="text" value={form.price} onChange={set("price")} />
                 </div>
                 <div>
                   <Label>Compare at Price</Label>
-                  <Input type="number" step="0.01" value={form.compare_at_price} onChange={set("compare_at_price")} />
+                  <Input type="text" value={form.compare_at_price} onChange={set("compare_at_price")} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
