@@ -45,11 +45,47 @@ export default function AdminProducts() {
   const productsQuery = useQuery({
     queryKey: ["admin-products"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*, categories(name)").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("products").select("*, categories(name)").order("position", { ascending: true }).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
+
+  const [orderedProducts, setOrderedProducts] = useState<any[]>([]);
+  useEffect(() => {
+    if (productsQuery.data) setOrderedProducts(productsQuery.data);
+  }, [productsQuery.data]);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const reorderMutation = useMutation({
+    mutationFn: async (items: { id: string; position: number }[]) => {
+      const updates = items.map((it) =>
+        supabase.from("products").update({ position: it.position }).eq("id", it.id)
+      );
+      const results = await Promise.all(updates);
+      const firstError = results.find((r) => r.error)?.error;
+      if (firstError) throw firstError;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-products"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["featured-products"] });
+      toast({ title: "Order saved" });
+    },
+    onError: (e: any) => toast({ title: "Reorder failed", description: e.message, variant: "destructive" }),
+  });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = orderedProducts.findIndex((p) => p.id === active.id);
+    const newIndex = orderedProducts.findIndex((p) => p.id === over.id);
+    const next = arrayMove(orderedProducts, oldIndex, newIndex);
+    setOrderedProducts(next);
+    const updates = next.map((p, i) => ({ id: p.id, position: i + 1 }));
+    reorderMutation.mutate(updates);
+  };
 
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
