@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
 import HeroBanner from "@/components/home/HeroBanner";
 import FeaturesStrip from "@/components/home/FeaturesStrip";
 import PromoBanners from "@/components/home/PromoBanners";
@@ -69,8 +70,27 @@ export default function Index() {
     toggleWishlist.mutate(productId);
   };
 
+  const homeJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    name: "Dynamic Universal Marketing",
+    description:
+      "Buy premium and affordable shoe storage racks online in India. Wooden, metal and multi-layer shoe racks for modern homes.",
+    url: "https://rufus-sam.lovable.app/",
+    image: "https://rufus-sam.lovable.app/og-image.jpg",
+    address: { "@type": "PostalAddress", addressCountry: "IN", addressRegion: "Karnataka" },
+    areaServed: "IN",
+  };
+
   return (
     <Layout>
+      <SEO
+        title="Shoe Rack Online India | Premium & Affordable Shoe Storage"
+        description="Shop modern shoe racks online in India — wooden, metal & multi-layer shoe storage racks. Premium build, affordable prices, free delivery in Karnataka."
+        keywords="shoe rack online, best shoe rack, wooden shoe rack, metal shoe rack, modern shoe rack for home, affordable shoe rack, shoe storage rack, premium shoe rack online India, home shoe organizer, multi layer shoe rack"
+        canonical="/"
+        jsonLd={homeJsonLd}
+      />
       <HeroBanner />
       <FeaturesStrip />
       <PromoBanners />
