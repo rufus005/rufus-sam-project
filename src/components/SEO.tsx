@@ -11,7 +11,7 @@ interface SEOProps {
   noindex?: boolean;
 }
 
-const SITE_URL = "https://rufus-sam.lovable.app";
+const SITE_URL = "https://www.dynamicshoerack.in";
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 function setMeta(attr: "name" | "property", key: string, content: string) {
@@ -63,7 +63,8 @@ export default function SEO({
     setMeta("property", "og:type", type);
     setMeta("property", "og:url", url);
     setMeta("property", "og:image", image);
-    setMeta("property", "og:site_name", "Dynamic Universal Marketing");
+    setMeta("property", "og:site_name", "Dynamic Shoe Rack");
+    setMeta("property", "og:locale", "en_IN");
 
     setMeta("name", "twitter:card", "summary_large_image");
     setMeta("name", "twitter:title", fullTitle);

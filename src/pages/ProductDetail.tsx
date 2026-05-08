@@ -160,13 +160,15 @@ export default function ProductDetail() {
     description: product.description || `${product.name} — premium shoe rack from Dynamic Universal Marketing.`,
     image: allImages.length ? allImages : undefined,
     sku: product.id,
-    brand: { "@type": "Brand", name: "Dynamic Universal Marketing" },
+    brand: { "@type": "Brand", name: "Dynamic Shoe Rack" },
     offers: {
       "@type": "Offer",
       price: Number(product.price) || 0,
       priceCurrency: "INR",
       availability: product.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       url: typeof window !== "undefined" ? window.location.href : undefined,
+      areaServed: "Bangalore",
+      seller: { "@type": "Organization", name: "Dynamic Shoe Rack" },
     },
     ...(reviewsQuery.data && reviewsQuery.data.length > 0
       ? {
@@ -182,9 +184,9 @@ export default function ProductDetail() {
   return (
     <Layout>
       <SEO
-        title={`${product.name} | Buy Online – Dynamic Universal Marketing`}
-        description={(product.description || `Buy ${product.name} online in India. Premium shoe storage rack with durable build, modern design and affordable pricing.`).slice(0, 160)}
-        keywords={`${product.name}, shoe rack online, ${(product as any).categories?.name || "shoe storage rack"}, buy shoe rack India`}
+        title={`${product.name} | Buy in Bangalore – Dynamic Shoe Rack`}
+        description={(product.description || `Buy ${product.name} in Bangalore with free delivery & installation. Durable shoe rack from Dynamic Shoe Rack.`).slice(0, 160)}
+        keywords={`${product.name}, shoe rack in Bangalore, ${(product as any).categories?.name || "shoe storage rack"}, free delivery, free installation`}
         canonical={`/products/${product.slug}`}
         image={allImages[0]}
         type="product"

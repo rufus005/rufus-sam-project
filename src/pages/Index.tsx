@@ -73,21 +73,23 @@ export default function Index() {
   const homeJsonLd = {
     "@context": "https://schema.org",
     "@type": "Store",
-    name: "Dynamic Universal Marketing",
+    name: "Dynamic Shoe Rack",
     description:
-      "Buy premium and affordable shoe storage racks online in India. Wooden, metal and multi-layer shoe racks for modern homes.",
-    url: "https://rufus-sam.lovable.app/",
-    image: "https://rufus-sam.lovable.app/og-image.jpg",
-    address: { "@type": "PostalAddress", addressCountry: "IN", addressRegion: "Karnataka" },
-    areaServed: "IN",
+      "Shoe racks, shoe shelters and shoe cabinets in Bangalore — metal, wooden and multi-layer designs with free delivery and free installation.",
+    url: "https://www.dynamicshoerack.in/",
+    image: "https://www.dynamicshoerack.in/og-image.jpg",
+    telephone: "+91-7899779304",
+    priceRange: "₹₹",
+    address: { "@type": "PostalAddress", addressLocality: "Bangalore", addressCountry: "IN", addressRegion: "Karnataka" },
+    areaServed: "Bangalore",
   };
 
   return (
     <Layout>
       <SEO
-        title="Shoe Rack Online India | Premium & Affordable Shoe Storage"
-        description="Shop modern shoe racks online in India — wooden, metal & multi-layer shoe storage racks. Premium build, affordable prices, free delivery in Karnataka."
-        keywords="shoe rack online, best shoe rack, wooden shoe rack, metal shoe rack, modern shoe rack for home, affordable shoe rack, shoe storage rack, premium shoe rack online India, home shoe organizer, multi layer shoe rack"
+        title="Shoe Rack in Bangalore | Free Delivery & Installation"
+        description="Buy metal & wooden shoe racks, shoe shelters and shoe cabinets in Bangalore. Free delivery & free installation across the city. Best prices guaranteed."
+        keywords="shoe rack in Bangalore, shoe shelter, shoe cabinet, metal shoe rack, wooden shoe rack, free delivery, free installation, shoe storage rack Bangalore, multi layer shoe rack"
         canonical="/"
         jsonLd={homeJsonLd}
       />
