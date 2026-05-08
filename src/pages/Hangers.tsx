@@ -10,9 +10,9 @@ export default function Hangers() {
   return (
     <Layout>
       <SEO
-        title="Cloth Hangers Online India | Premium Wardrobe Hangers"
-        description="Shop premium cloth hangers online in India — wooden, plastic and metal hanger collections for modern wardrobes. Durable build and affordable pricing."
-        keywords="cloth hangers online, wooden hangers, wardrobe hangers India, premium hangers"
+        title="Cloth Hangers in Bangalore | Wardrobe Hangers"
+        description="Premium cloth hangers in Bangalore — wooden, plastic & metal hangers for modern wardrobes. Free delivery across the city."
+        keywords="cloth hangers Bangalore, wooden hangers, wardrobe hangers, premium hangers Bangalore"
         canonical="/products/hangers"
       />
       <PageHero

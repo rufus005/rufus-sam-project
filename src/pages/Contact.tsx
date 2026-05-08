@@ -70,9 +70,9 @@ export default function Contact() {
   return (
     <Layout>
       <SEO
-        title="Contact Dynamic Universal Marketing | Shoe Rack Enquiry India"
-        description="Get in touch with Dynamic Universal Marketing for shoe rack enquiries, bulk orders, delivery and installation across Karnataka, Tamil Nadu and Hyderabad."
-        keywords="shoe rack contact, buy shoe rack Bangalore, shoe rack dealer India"
+        title="Contact Dynamic Shoe Rack | Shoe Rack Bangalore"
+        description="Contact Dynamic Shoe Rack for shoe racks, shoe shelters & shoe cabinets in Bangalore. Free delivery & free installation. Bulk orders welcome."
+        keywords="shoe rack Bangalore contact, buy shoe rack Bangalore, shoe shelter dealer Bangalore, shoe cabinet Bangalore"
         canonical="/contact"
       />
       {/* Hero */}

@@ -21,4 +21,4 @@ User-agent: Bingbot
 Allow: /
 Disallow: /admin
 
-Sitemap: https://rufus-sam.lovable.app/sitemap.xml
+Sitemap: https://www.dynamicshoerack.in/sitemap.xml

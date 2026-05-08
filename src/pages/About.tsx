@@ -62,9 +62,9 @@ export default function About() {
   return (
     <Layout>
       <SEO
-        title="About Dynamic Universal Marketing | Premium Shoe Rack Brand India"
-        description="Learn about Dynamic Universal Marketing — a trusted Indian brand offering premium, durable and affordable shoe storage racks for modern homes and businesses."
-        keywords="about dynamic universal marketing, shoe rack brand India, premium shoe storage company"
+        title="About Dynamic Shoe Rack | Bangalore Shoe Rack Brand"
+        description="Dynamic Shoe Rack — Bangalore's trusted brand for shoe racks, shoe shelters and shoe cabinets. Free delivery & free installation across the city."
+        keywords="about dynamic shoe rack, shoe rack Bangalore, shoe shelter brand, shoe cabinet Bangalore"
         canonical="/about"
       />
       <PageHero
